@@ -350,10 +350,10 @@ void test_iterate_function_null(void)
 	queue_func_t delete_funcs[] = {delete_head, delete_mid, delete_tail, delete_next};
 
 	fprintf(stderr, "*** TEST iterate delete ***\n");
-	// 
+	// Test each of the delete functions 
 	for (j = 0; j < 4; ++j) {
 		global_q = queue_create();
-		
+
 		for (i = 0; i < 3; ++i) {
 			queue_enqueue(global_q, data + i);
 		}
@@ -373,7 +373,32 @@ void test_iterate_function_null(void)
 }
 
 /* Length null */
+void test_length_null(void)
+{
+	int result;
+
+	fprintf(stderr, "*** TEST length null ***\n");
+
+	result = queue_length(NULL);
+
+	TEST_ASSERT(result == -1);
+}
+
 /* Length simple */
+void test_length_simple(void)
+{
+	queue_t q;
+	int result;
+	int data[] = {1, 2, 3};
+	int i;
+	int *ptr;
+
+	fprintf(stderr, "*** TEST lenght simple ***\n");
+	for (i = 0; i < 3; ++i) {
+		queue_enqueue(q, data + i);
+	}
+	TEST_ASSERT(queue_length == 3);
+}
 
 /* Enqueue/Dequeue simple */
 void test_queue_simple(void)

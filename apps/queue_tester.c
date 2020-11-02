@@ -128,7 +128,7 @@ void test_dequeue_empty(void)
 	int data;
 	int *ptr;
 
-	fprintf(stderr, "*** TEST dequeue data null ***\n");
+	fprintf(stderr, "*** TEST dequeue queue empty ***\n");
 
 	q = queue_create();
 	result = queue_dequeue(q, (void**)&ptr);
@@ -137,9 +137,126 @@ void test_dequeue_empty(void)
 }
 
 /* Delete null */
+void test_delete_null(void)
+{
+	int result;
+	int data;
+
+	fprintf(stderr, "*** TEST delete queue null ***\n");
+
+	result = queue_delete(NULL, &data);
+
+	TEST_ASSERT(result == -1);
+}
 /* Delete data null */
+void test_data_null(void)
+{
+	queue_t q;
+	int result;
+
+	fprintf(stderr, "*** TEST delete data null ***\n");
+
+	result = queue_delete(q, NULL);
+
+	TEST_ASSERT(result == -1);
+}
 /* Delete data not in queue */
-/* Delete success */
+void test_delete_not_found(void)
+{
+	int data[] = {1, 2, 3, 4, 5, 6};
+	int *ptr;
+	queue_t q;
+	int i, result;
+
+	fprintf(stderr, "*** TEST delete not found ***\n");
+
+	q = queue_create();
+	for (i = 0; i < 5; ++i) {
+		queue_enqueue(q, data + i);
+	}
+	
+	result = queue_delete(q, data + 5);
+
+	TEST_ASSERT(result == -1);
+}
+/* Delete success simple */
+void test_delete_simple(void)
+{
+	int data = 3;
+	queue_t q;
+	int i, result;
+
+	fprintf(stderr, "*** TEST delete simple ***\n");
+
+	q = queue_create();
+	queue_enqueue(q, &data);
+	
+	result = queue_delete(q, &data);
+
+	TEST_ASSERT(queue_length(q) == 0);
+}
+/* Delete success complex */
+void test_delete_complex(void)
+{
+	int data[] = {1, 2, 3, 4, 5};
+	queue_t q;
+	int i, result;
+
+	fprintf(stderr, "*** TEST delete complex ***\n");
+
+	q = queue_create();
+	for (i = 0; i < 5; ++i) {
+		queue_enqueue(q, data + i);
+	}
+	
+	result = queue_delete(q, data + 3);
+
+	TEST_ASSERT(queue_length(q) == 4);
+	TEST_ASSERT(result == 0);
+}
+/* Delete success head */
+void test_delete_head(void)
+{
+	int data[] = {1, 2, 3};
+	queue_t q;
+	int i, result;
+	int *ptr;
+
+	fprintf(stderr, "*** TEST delete head ***\n");
+
+	q = queue_create();
+	for (i = 0; i < 3; ++i) {
+		queue_enqueue(q, data + i);
+	}
+	
+	result = queue_delete(q, data);
+	queue_dequeue(q, (void**)&ptr);
+
+	TEST_ASSERT(queue_length(q) == 2);
+	TEST_ASSERT(ptr == data + 1);
+}
+
+/* Delete success tail */
+void test_delete_tail(void)
+{
+	int data[] = {1, 2, 3};
+	queue_t q;
+	int i, result;
+	int *ptr;
+
+	fprintf(stderr, "*** TEST delete tail ***\n");
+
+	q = queue_create();
+	for (i = 0; i < 3; ++i) {
+		queue_enqueue(q, data + i);
+	}
+	
+	result = queue_delete(q, data + 2);
+	queue_dequeue(q, (void**)&ptr);
+
+	TEST_ASSERT(queue_length(q) == 2);
+	TEST_ASSERT(ptr == data);
+}
 
 /* Iterate null */
 /* Iterate simple */

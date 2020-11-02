@@ -22,12 +22,50 @@ void test_create(void)
 
 	TEST_ASSERT(queue_create() != NULL);
 }
-
 /* Create Malloc Error */
 
 /* Destory Simple */
+void test_destroy(void)
+{
+	queue_t q;
+	int result;
+
+	fprintf(stderr, "*** TEST destroy simple ***\n");
+
+	q = queue_create();
+	result = queue_destroy(q);
+
+	TEST_ASSERT(result == 0);
+	TEST_ASSERT(q == NULL);
+}
 /* Destory Null */
+void test_destroy_null(void)
+{
+	int result;
+
+	fprintf(stderr, "*** TEST destroy null ***\n");
+
+	result = queue_destroy(NULL);
+
+	TEST_ASSERT(result == -1);
+}
 /* Destroy Not Empty */
+void test_destroy_not_empty(void)
+{
+	queue_t q;
+	int result;
+	int t;
+
+	fprintf(stderr, "*** TEST destroy not empty ***\n");
+
+	q = queue_create();
+	queue_enqueue(q, &t);
+	result = queue_destroy(q);
+
+	// Should queue be deleted or not if not empty?
+
+	TEST_ASSERT(result == -1);
+}
 
 /* Enqueue null */
 /* Enqueue data null */

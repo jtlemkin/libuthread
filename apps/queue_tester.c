@@ -68,8 +68,31 @@ void test_destroy_not_empty(void)
 }
 
 /* Enqueue null */
+void test_enqueue_null(void)
+{
+	int result;
+	int data;
+
+	fprintf(stderr, "*** TEST enqueue null ***\n");
+
+	result = queue_enqueue(NULL, &data);
+
+	TEST_ASSERT(result == -1);
+}
 /* Enqueue data null */
-/* Enqueue empty queue */
+void test_enqueue_data_null(void)
+{
+	queue_t q;
+	int result;
+
+	fprintf(stderr, "*** TEST enqueue data null ***\n");
+
+	q = queue_create();
+	result = queue_enqueue(q, NULL);
+
+	TEST_ASSERT(result == -1);
+}
+/* Enqueue malloc error */
 
 /* Dequeue null */
 /* Dequeue data pointer null */
@@ -92,12 +115,15 @@ void test_queue_simple(void)
 {
 	int data = 3, *ptr;
 	queue_t q;
+	int result1, result2;
 
 	fprintf(stderr, "*** TEST queue_simple ***\n");
 
 	q = queue_create();
-	queue_enqueue(q, &data);
-	queue_dequeue(q, (void**)&ptr);
+	result1 = queue_enqueue(q, &data);
+	result2 = queue_dequeue(q, (void**)&ptr);
+	TEST_ASSERT(result1 == 0);
+	TEST_ASSERT(result2 == 0);
 	TEST_ASSERT(ptr == &data);
 }
 

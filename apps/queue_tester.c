@@ -95,8 +95,46 @@ void test_enqueue_data_null(void)
 /* Enqueue malloc error */
 
 /* Dequeue null */
+void test_dequeue_null(void)
+{
+	int result;
+	int data;
+	int *ptr;
+
+	fprintf(stderr, "*** TEST dequeue null ***\n");
+
+	result = queue_dequeue(NULL, (void**)&ptr);
+
+	TEST_ASSERT(result == -1);
+}
 /* Dequeue data pointer null */
+void test_dequeue_data_null(void)
+{
+	queue_t q;
+	int result;
+
+	fprintf(stderr, "*** TEST dequeue data null ***\n");
+
+	q = queue_create();
+	result = queue_dequeue(q, NULL);
+
+	TEST_ASSERT(result == -1);
+}
 /* Dequeue empty */
+void test_dequeue_empty(void)
+{
+	queue_t q;
+	int result;
+	int data;
+	int *ptr;
+
+	fprintf(stderr, "*** TEST dequeue data null ***\n");
+
+	q = queue_create();
+	result = queue_dequeue(q, (void**)&ptr);
+
+	TEST_ASSERT(result == -1);
+}
 
 /* Delete null */
 /* Delete data null */
@@ -128,8 +166,24 @@ void test_queue_simple(void)
 }
 
 /* Enqueue/Dequeue complex */
+void test_queue_complex(void)
+{
+	int data[5] = {1, 2, 3, 4, 5};
+	int *ptr;
+	queue_t q;
+	int i;
 
+	fprintf(stderr, "*** TEST queue_simple ***\n");
 
+	q = queue_create();
+	for (i = 0; i < 5; ++i) {
+		queue_enqueue(q, (data + i));
+	}
+	for (i = 0; i < 5; ++i) {
+		queue_dequeue(q, (void**)&data);
+		TEST_ASSERT(ptr == (data + i));
+	}
+}
 
 
 int main(void)

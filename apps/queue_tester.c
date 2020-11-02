@@ -287,7 +287,7 @@ void test_iterate_function_null(void)
 	TEST_ASSERT(result == -1);
 }
 /* Iterate simple */
-void test_iterate_function_null(void)
+void test_iterate_simple(void)
 {
 	queue_t q;
 	int result;
@@ -360,13 +360,10 @@ void test_iterate_function_null(void)
 
 		queue_iterate(global_q, delete_funcs + j);
 
-		for (i = 0; i < 3; ++i) {
+		for (i = 0; i < 2; ++i) {
 			result = queue_dequeue(global_q, (void**)&ptr);
+
 			TEST_ASSERT(result == 0);
-			// Each element should be incrememented by the inc function, each 
-			// element is also originally one greater than it's index, so the new 
-			// value should be i + 2
-			TEST_ASSERT(*ptr == i + 2);
 		}
 		queue_destroy(global_q);
 	}
@@ -393,7 +390,7 @@ void test_length_simple(void)
 	int i;
 	int *ptr;
 
-	fprintf(stderr, "*** TEST lenght simple ***\n");
+	fprintf(stderr, "*** TEST length simple ***\n");
 	for (i = 0; i < 3; ++i) {
 		queue_enqueue(q, data + i);
 	}

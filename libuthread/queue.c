@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "queue.h"
 
@@ -69,6 +70,8 @@ int queue_dequeue(queue_t queue, void **data)
         return -1; // Cannot dequeue, queue is empty.
     }
 
+    // for debug:
+    fprintf(stderr, "*** %d ***\n", queue->headNode->data);
 
     *data = queue->headNode->data; // update the void pointer to point to the data being stored. Somewhat uncertain about this due to void** shennanigans
 
@@ -87,7 +90,15 @@ int queue_dequeue(queue_t queue, void **data)
 
 int queue_delete(queue_t queue, void *data)
 {
-    /* TODO Phase 1 */
+    // Gameplan: Start at the head of the queue, work towards the tail, checking to see if the data matches.
+    struct queueNode* tempNode = queue->headNode;
+    while (tempNode != NULL){ // Should handle case of a null queue appropriately.
+        // I'm pretty sure we want to do a comparison in the following manner: if (*(tempNode->data) == *data) ... But this doesn't seem to work. How do we compare the data of void pointers?
+        if (*((int*)tempNode->data) == *((int*)data)){ // I think this should work?
+            fprintf(stderr, "*** %d ***\n", *(int*)tempNode->data);
+        }
+        tempNode = tempNode->nextNode; // Adjust temp node as we move through the linked list
+    }
 }
 
 int queue_iterate(queue_t queue, queue_func_t func)
@@ -97,6 +108,12 @@ int queue_iterate(queue_t queue, queue_func_t func)
 
 int queue_length(queue_t queue)
 {
-    /* TODO Phase 1 */
+    int length = 0;
+    struct queueNode* tempNode = queue->headNode;
+    while (tempNode != NULL){ // Should handle base case of a null queue appropriately.
+        length += 1;
+        tempNode = tempNode->nextNode; // Adjust temp node as we move through the linked list
+    }
+    return length;
 }
 

@@ -8,7 +8,7 @@
 
 struct queueNode {
     /* TODO Phase 1 */
-    void* data; // Perhaps we need to replace this at a later date? Should be fine for now. We need to ensure this can store all data types.
+    void* data;
     struct queueNode* nextNode;
 };
 
@@ -83,7 +83,6 @@ int queue_dequeue(queue_t queue, void **data)
     }
 
     free(tempHead); // Delete the old node's data in memory.
-
     return 0;
 
 }
@@ -92,18 +91,34 @@ int queue_delete(queue_t queue, void *data)
 {
     // Gameplan: Start at the head of the queue, work towards the tail, checking to see if the data matches.
     struct queueNode* tempNode = queue->headNode;
+    struct queueNode* priorNode = NULL;
+
     while (tempNode != NULL){ // Should handle case of a null queue appropriately.
         // I'm pretty sure we want to do a comparison in the following manner: if (*(tempNode->data) == *data) ... But this doesn't seem to work. How do we compare the data of void pointers?
-        if (*((int*)tempNode->data) == *((int*)data)){ // I think this should work?
-            fprintf(stderr, "*** %d ***\n", *(int*)tempNode->data);
+        if ((tempNode->data) == (data)){ // I think this should work?
+            fprintf(stderr, "*** %d ***\n", tempNode->data);
+            fprintf(stderr, "*** Match found, attempting deletion ***\n", *(int*)tempNode->data);
+            if (priorNode == NULL){
+                queue->headNode = queue->headNode->nextNode; // Case in which the head is the node with data to delete. Overwrite.
+            } else {
+                priorNode->nextNode = tempNode->nextNode; // Adjust queue structure, skipping over the node that we found the data at.
+                if (priorNode->nextNode == NULL){
+                    queue->tailNode  =  priorNode; // Case in which we have just deleted the tail. Set the prior node to be the tail.
+                }
+            }
+            free(tempNode); // Given that we have removed the tempNode from the queue, we can free it.
+            return 0;
         }
+        priorNode = tempNode; // If the data was not present at the tempNode we examined, store it as the previous node we looked at and proceed.
         tempNode = tempNode->nextNode; // Adjust temp node as we move through the linked list
     }
+    return -1; // Data not found in any of the nodes.
 }
 
 int queue_iterate(queue_t queue, queue_func_t func)
 {
     /* TODO Phase 1 */
+    // Consider making a copy of the queue in order to prevent things from being deleted as you are iterating through it and causing problems.
 }
 
 int queue_length(queue_t queue)

@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "queue.h"
+#include "Queue.h"
 
 
 struct queueNode {
@@ -131,7 +131,7 @@ int queue_dequeue(queue_t queue, void **data)
     }
 
     // for debug:
-    fprintf(stderr, "*** In Dequeue ***\n";
+    fprintf(stderr, "*** In Dequeue ***\n");
     fprintf(stderr, "*** %d ***\n", queue->headNode->data);
 
     *data = queue->headNode->data; // update the void pointer to point to the data being stored. Somewhat uncertain about this due to void** shennanigans
@@ -208,7 +208,7 @@ int queue_iterate(queue_t queue, queue_func_t func)
 
     while (tempNode != NULL){
         theNextNode = tempNode->nextNode; // Store next node prior to editing.
-        func(queue, tempNode->data) // Call the function on the data
+        func(tempNode->data); // Call the function on the data
         if (tempNode->nextNode != NULL) {
             priorNode = tempNode;
             tempNode = tempNode->nextNode; // Then move on.

@@ -101,6 +101,7 @@ int queue_enqueue(queue_t queue, void *data)
         // Malloc failed.
         return -1;
     }
+
     newNode->data = data; // Set the data pointer of the node to point at the address of the input data. (Only way I can think to handle void* style data input)
     // May need to reference the discussion from last week to ensure this is working properly. Proper approach might be: newNode.data = &data;
     newNode->nextNode = NULL;

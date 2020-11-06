@@ -98,7 +98,6 @@ void test_enqueue_data_null(void)
 void test_dequeue_null(void)
 {
 	int result;
-	int data;
 	int *ptr;
 
 	fprintf(stderr, "*** TEST dequeue null ***\n");
@@ -125,7 +124,6 @@ void test_dequeue_empty(void)
 {
 	queue_t q;
 	int result;
-	int data;
 	int *ptr;
 
 	fprintf(stderr, "*** TEST dequeue queue empty ***\n");
@@ -155,6 +153,7 @@ void test_delete_data_null(void)
 	int result;
 
 	fprintf(stderr, "*** TEST delete data null ***\n");
+	q = queue_create();
 
 	result = queue_delete(q, NULL);
 
@@ -164,7 +163,6 @@ void test_delete_data_null(void)
 void test_delete_not_found(void)
 {
 	int data[] = {1, 2, 3, 4, 5, 6};
-	int *ptr;
 	queue_t q;
 	int i, result;
 
@@ -184,14 +182,13 @@ void test_delete_simple(void)
 {
 	int data = 3;
 	queue_t q;
-	int i, result;
 
 	fprintf(stderr, "*** TEST delete simple ***\n");
 
 	q = queue_create();
 	queue_enqueue(q, &data);
 	
-	result = queue_delete(q, &data);
+	queue_delete(q, &data);
 
 	TEST_ASSERT(queue_length(q) == 0);
 }
@@ -219,7 +216,7 @@ void test_delete_head(void)
 {
 	int data[] = {1, 2, 3};
 	queue_t q;
-	int i, result;
+	int i;
 	int *ptr;
 
 	fprintf(stderr, "*** TEST delete head ***\n");
@@ -229,7 +226,7 @@ void test_delete_head(void)
 		queue_enqueue(q, data + i);
 	}
 	
-	result = queue_delete(q, data);
+	queue_delete(q, data);
 	queue_dequeue(q, (void**)&ptr);
 
 	TEST_ASSERT(queue_length(q) == 2);
@@ -241,7 +238,7 @@ void test_delete_tail(void)
 {
 	int data[] = {1, 2, 3};
 	queue_t q;
-	int i, result;
+	int i;
 	int *ptr;
 
 	fprintf(stderr, "*** TEST delete tail ***\n");
@@ -251,7 +248,7 @@ void test_delete_tail(void)
 		queue_enqueue(q, data + i);
 	}
 	
-	result = queue_delete(q, data + 2);
+	queue_delete(q, data + 2);
 	queue_dequeue(q, (void**)&ptr);
 
 	TEST_ASSERT(queue_length(q) == 2);
@@ -281,6 +278,7 @@ void test_iterate_function_null(void)
 	int result;
 
 	fprintf(stderr, "*** TEST iterate function null ***\n");
+	q = queue_create();
 
 	result = queue_delete(q, NULL);
 
@@ -296,6 +294,8 @@ void test_iterate_simple(void)
 	int *ptr;
 
 	fprintf(stderr, "*** TEST iterate simple ***\n");
+
+	q = queue_create();
 	for (i = 0; i < 3; ++i) {
 		queue_enqueue(q, data + i);
 	}
@@ -341,13 +341,12 @@ void delete_next(void* ptr) {
 }
 
 /* Iterate delete element */
-void test_iterate_function_null(void)
+void test_iterate_delete(queue_func_t func)
 {
 	int result;
 	int data[] = {1, 2, 3};
 	int i, j;
 	int *ptr;
-	queue_func_t delete_funcs[] = {delete_head, delete_mid, delete_tail, delete_next};
 
 	fprintf(stderr, "*** TEST iterate delete ***\n");
 	// Test each of the delete functions 
@@ -358,8 +357,8 @@ void test_iterate_function_null(void)
 			queue_enqueue(global_q, data + i);
 		}
 
-		queue_iterate(global_q, delete_funcs + j);
-
+		queue_iterate(global_q, func);
+		
 		for (i = 0; i < 2; ++i) {
 			result = queue_dequeue(global_q, (void**)&ptr);
 
@@ -367,6 +366,22 @@ void test_iterate_function_null(void)
 		}
 		queue_destroy(global_q);
 	}
+}
+
+void test_iterate_delete_head(void) {
+	test_iterate_delete(&delete_head);
+}
+
+void test_iterate_delete_tail(void) {
+	test_iterate_delete(&delete_tail);
+}
+
+void test_iterate_delete_mid(void) {
+	test_iterate_delete(&delete_mid);
+}
+
+void test_iterate_delete_next(void) {
+	test_iterate_delete(&delete_next);
 }
 
 /* Length null */
@@ -385,16 +400,16 @@ void test_length_null(void)
 void test_length_simple(void)
 {
 	queue_t q;
-	int result;
 	int data[] = {1, 2, 3};
 	int i;
-	int *ptr;
 
 	fprintf(stderr, "*** TEST length simple ***\n");
+
+	q = queue_create();
 	for (i = 0; i < 3; ++i) {
 		queue_enqueue(q, data + i);
 	}
-	TEST_ASSERT(queue_length == 3);
+	TEST_ASSERT(queue_length(q) == 3);
 }
 
 /* Enqueue/Dequeue simple */
@@ -429,7 +444,7 @@ void test_queue_complex(void)
 		queue_enqueue(q, (data + i));
 	}
 	for (i = 0; i < 5; ++i) {
-		queue_dequeue(q, (void**)&data);
+		queue_dequeue(q, (void**)&ptr);
 		TEST_ASSERT(ptr == (data + i));
 	}
 }
@@ -457,6 +472,10 @@ int main(void)
 	test_iterate_function_null();
 	test_iterate_simple();
 	test_iterate_function_null();
+	test_iterate_delete_head();
+	test_iterate_delete_tail();
+	test_iterate_delete_mid();
+	test_iterate_delete_next();
 	test_length_null();
 	test_length_simple();
 	test_queue_simple();

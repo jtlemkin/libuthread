@@ -29,7 +29,7 @@ endif
 
 all: $(lib)
 
-deps := $(patsubst %.0,%.d,$(objs))
+deps := $(patsubst %.o,%.d,$(objs))
 -include $(deps)
 
 $(lib): $(objs)

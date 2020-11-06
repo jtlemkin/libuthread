@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "queue.h"
+#include "Queue.h"
 
 
 struct queueNode {
@@ -36,15 +36,15 @@ int queue_dequeueNoCollect(queue_t queue)
 
     // for debug:
     fprintf(stderr, "*** DEBUG deQueueNoCollect ***\n");
-    //fprintf(stderr, "*** %d ***\n", *(queue->headNode->data));
+    fprintf(stderr, "*** %d ***\n", queue->headNode->data);
 
-    queue->headNode->data = NULL;
+    queue->headNode->data == NULL;
 
     struct queueNode* tempHead = queue->headNode; // Store old head temporarily
     queue->headNode = queue->headNode->nextNode; // Adjust queue to account for removal of the old head
 
     if (queue->headNode == NULL){
-        queue->tailNode = NULL; // Seems that was the last node. Set the queue to the empty state
+        queue->tailNode == NULL; // Seems that was the last node. Set the queue to the empty state
     }
 
     free(tempHead); // Delete the old node's data in memory.
@@ -101,7 +101,7 @@ int queue_enqueue(queue_t queue, void *data)
         // Malloc failed.
         return -1;
     }
-    newNode->data = &data; // Set the data pointer of the node to point at the address of the input data. (Only way I can think to handle void* style data input)
+    newNode->data = data; // Set the data pointer of the node to point at the address of the input data. (Only way I can think to handle void* style data input)
     // May need to reference the discussion from last week to ensure this is working properly. Proper approach might be: newNode.data = &data;
     newNode->nextNode = NULL;
 
@@ -132,7 +132,7 @@ int queue_dequeue(queue_t queue, void **data)
 
     // for debug:
     fprintf(stderr, "*** In Dequeue ***\n");
-    //fprintf(stderr, "*** %d ***\n", &(queue->headNode->data));
+    fprintf(stderr, "*** %d ***\n", queue->headNode->data);
 
     *data = queue->headNode->data; // update the void pointer to point to the data being stored. Somewhat uncertain about this due to void** shennanigans
 
@@ -140,7 +140,7 @@ int queue_dequeue(queue_t queue, void **data)
     queue->headNode = queue->headNode->nextNode; // Adjust queue to account for removal of the old head
 
     if (queue->headNode == NULL){
-        queue->tailNode = NULL; // Seems that was the last node. Set the queue to the empty state
+        queue->tailNode == NULL; // Seems that was the last node. Set the queue to the empty state
     }
 
     free(tempHead); // Delete the old node's data in memory.
@@ -167,9 +167,9 @@ int queue_delete(queue_t queue, void *data)
 
     while (tempNode != NULL){ // Should handle case of a null queue appropriately.
         // I'm pretty sure we want to do a comparison in the following manner: if (*(tempNode->data) == *data) ... But this doesn't seem to work. How do we compare the data of void pointers?
-        if ((tempNode->data) == (data)){ // I think this should work?
-            //fprintf(stderr, "*** %d ***\n", &(tempNode->data));
-            fprintf(stderr, "*** Match found, attempting deletion ***\n");
+        if (((tempNode->data)) == (data)){ // I think this should work?
+            fprintf(stderr, "*** %d ***\n", tempNode->data);
+            fprintf(stderr, "*** Match found, attempting deletion ***\n", *(int*)tempNode->data);
             if (priorNode == NULL){
                 queue->headNode = queue->headNode->nextNode; // Case in which the head is the node with data to delete. Overwrite.
             } else {
@@ -203,14 +203,14 @@ int queue_iterate(queue_t queue, queue_func_t func)
     }
 
     struct queueNode* tempNode = queue->headNode;
-    //struct queueNode* priorNode = NULL;
+    struct queueNode* priorNode = NULL;
     struct queueNode* theNextNode = NULL;
 
     while (tempNode != NULL){
         theNextNode = tempNode->nextNode; // Store next node prior to editing.
         func(tempNode->data); // Call the function on the data
         if (tempNode->nextNode != NULL) {
-            //priorNode = tempNode;
+            priorNode = tempNode;
             tempNode = tempNode->nextNode; // Then move on.
         } else{ // If there is no longer a next node, this can mean a few things. We could either have deleted the current node, or we may have reached the end.
             if (theNextNode != NULL){ // Ah, it seems we deleted the node we were working on. This could occur if delete is called on the info of tempNode.

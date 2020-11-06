@@ -189,9 +189,40 @@ int queue_delete(queue_t queue, void *data)
 
 int queue_iterate(queue_t queue, queue_func_t func)
 {
-    /* TODO Phase 1 */
     // Consider making a copy of the queue in order to prevent things from being deleted as you are iterating through it and causing problems.
+    // Attempting this method first, will test to see if it functions correctly:
 
+    // A thought: Perhaps it is only necessary to make a copy if we are using a non linked listed implementation? IE, if we had attempted at the start to iterate using the length of the original array as an index
+    // We should be fine. Going to test this:
+
+    if (queue == NULL){
+        return -1; // Cannot perform action, queue is null.
+    }
+    if (func == NULL){
+        return -1; // Cannot use func, it is null.
+    }
+
+    struct queueNode* tempNode = queue->headNode;
+    struct queueNode* priorNode = NULL;
+    struct queueNode* theNextNode = NULL;
+
+    while (tempNode != NULL){
+        theNextNode = tempNode->nextNode; // Store next node prior to editing.
+        func(queue, tempNode->data) // Call the function on the data
+        if (tempNode->nextNode != NULL) {
+            priorNode = tempNode;
+            tempNode = tempNode->nextNode; // Then move on.
+        } else{ // If there is no longer a next node, this can mean a few things. We could either have deleted the current node, or we may have reached the end.
+            if (theNextNode != NULL){ // Ah, it seems we deleted the node we were working on. This could occur if delete is called on the info of tempNode.
+                tempNode = theNextNode;
+            } else{
+                // Well it seems there wasn't a next node present before we called the function either. We must have finished.
+                return 0;
+            }
+
+        }
+    }
+    // Shouldn't reach here unless tempnode was null to begin with. In which case, we have an empty queue.
     return 0;
 }
 

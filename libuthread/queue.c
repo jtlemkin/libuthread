@@ -38,13 +38,13 @@ int queue_dequeueNoCollect(queue_t queue)
     fprintf(stderr, "*** DEBUG deQueueNoCollect ***\n");
     fprintf(stderr, "*** %d ***\n", queue->headNode->data);
 
-    queue->headNode->data == NULL;
+    queue->headNode->data = NULL;
 
     struct queueNode* tempHead = queue->headNode; // Store old head temporarily
     queue->headNode = queue->headNode->nextNode; // Adjust queue to account for removal of the old head
 
     if (queue->headNode == NULL){
-        queue->tailNode == NULL; // Seems that was the last node. Set the queue to the empty state
+        queue->tailNode = NULL; // Seems that was the last node. Set the queue to the empty state
     }
 
     free(tempHead); // Delete the old node's data in memory.
@@ -140,7 +140,7 @@ int queue_dequeue(queue_t queue, void **data)
     queue->headNode = queue->headNode->nextNode; // Adjust queue to account for removal of the old head
 
     if (queue->headNode == NULL){
-        queue->tailNode == NULL; // Seems that was the last node. Set the queue to the empty state
+        queue->tailNode = NULL; // Seems that was the last node. Set the queue to the empty state
     }
 
     free(tempHead); // Delete the old node's data in memory.

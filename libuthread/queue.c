@@ -189,7 +189,7 @@ int queue_delete(queue_t queue, void *data)
     return -1; // Data not found in any of the nodes.
 }
 
-queue_t que_copy(queue_t queue) {
+queue_t queue_copy(queue_t queue) {
     queue_t new_queue = queue_create();
     struct queueNode *current = queue->headNode;
 
@@ -226,7 +226,7 @@ int queue_iterate(queue_t queue, queue_func_t func)
 
     // Create a copy so that no matter what, every the func is called on every
     // node, even if it is deleted before we get to it
-    queue_t copy = que_copy(queue);
+    queue_t copy = queue_copy(queue);
     struct queueNode *current = copy->headNode;
 
     while (current) {

@@ -224,7 +224,7 @@ int queue_iterate(queue_t queue, queue_func_t func)
         return -1; // Cannot perform action, queue is null.
     }
 
-    // Create a copy so that no matter what, every the func is called on every
+    // Create a copy so that no matter what, the func is called on every
     // node, even if it is deleted before we get to it
     queue_t copy = queue_copy(queue);
     struct queueNode *current = copy->headNode;

@@ -36,7 +36,6 @@ void test_destroy(void)
 	result = queue_destroy(q);
 
 	TEST_ASSERT(result == 0);
-	TEST_ASSERT(q == NULL);
 }
 /* Destory Null */
 void test_destroy_null(void)
@@ -227,9 +226,9 @@ void test_delete_head(void)
 	}
 	
 	queue_delete(q, data);
-	queue_dequeue(q, (void**)&ptr);
-
 	TEST_ASSERT(queue_length(q) == 2);
+
+	queue_dequeue(q, (void**)&ptr);
 	TEST_ASSERT(ptr == data + 1);
 }
 
@@ -249,16 +248,16 @@ void test_delete_tail(void)
 	}
 	
 	queue_delete(q, data + 2);
-	queue_dequeue(q, (void**)&ptr);
-
 	TEST_ASSERT(queue_length(q) == 2);
+
+	queue_dequeue(q, (void**)&ptr);
 	TEST_ASSERT(ptr == data);
 }
 
 /* Iterate null */
 void inc(void *n) {
-	int *a = (int*) a;
-	*a += 1;
+	int *a = (int*) n;
+	*a = *a + 1;
 }
 
 void test_iterate_null(void)

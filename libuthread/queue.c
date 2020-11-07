@@ -205,8 +205,10 @@ queue_t que_copy(queue_t queue) {
 int queue_free(queue_t queue) {
     void *ptr;
 
+    // Empty the queue
     while (queue_dequeue(queue, &ptr) != -1);
 
+    // Then destroy
     return queue_destroy(queue);
 }
 
@@ -222,6 +224,8 @@ int queue_iterate(queue_t queue, queue_func_t func)
         return -1; // Cannot perform action, queue is null.
     }
 
+    // Create a copy so that no matter what, every the func is called on every
+    // node, even if it is deleted before we get to it
     queue_t copy = que_copy(queue);
     struct queueNode *current = copy->headNode;
 

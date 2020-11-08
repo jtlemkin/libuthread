@@ -188,7 +188,7 @@ int queue_delete(queue_t queue, void *data)
     }
     return -1; // Data not found in any of the nodes.
 }
-
+/*
 queue_t queue_copy(queue_t queue) {
     queue_t new_queue = queue_create();
     struct queueNode *current = queue->headNode;
@@ -200,6 +200,7 @@ queue_t queue_copy(queue_t queue) {
 
     return new_queue;
 }
+ */
 
 // Deallocates the memory of a queue even if non-empty
 int queue_free(queue_t queue) {
@@ -211,7 +212,7 @@ int queue_free(queue_t queue) {
     // Then destroy
     return queue_destroy(queue);
 }
-
+/*
 int queue_iterate(queue_t queue, queue_func_t func)
 {
     // Consider making a copy of the queue in order to prevent things from being deleted as you are iterating through it and causing problems.
@@ -236,6 +237,40 @@ int queue_iterate(queue_t queue, queue_func_t func)
 
     queue_free(copy);
 
+    return 0;
+}
+ */
+
+// Reinstating old version of iterate.
+int queue_iterate(queue_t queue, queue_func_t func)
+{
+    // Consider making a copy of the queue in order to prevent things from being deleted as you are iterating through it and causing problems.
+    // Attempting this method first, will test to see if it functions correctly:
+    // A thought: Perhaps it is only necessary to make a copy if we are using a non linked listed implementation? IE, if we had attempted at the start to iterate using the length of the original array as an index
+    // We should be fine. Going to test this:
+    if (queue == NULL || func == NULL){
+        return -1; // Cannot perform action, queue or func is null.
+    }
+
+    struct queueNode* tempNode = queue->headNode;
+    //struct queueNode* priorNode = NULL;
+    struct queueNode* theNextNode = NULL;
+    while (tempNode != NULL){
+        theNextNode = tempNode->nextNode; // Store next node prior to editing.
+        func(tempNode->data); // Call the function on the data
+        if (tempNode->nextNode != NULL) {
+            //priorNode = tempNode;
+            tempNode = tempNode->nextNode; // Then move on.
+        } else{ // If there is no longer a next node, this can mean a few things. We could either have deleted the current node, or we may have reached the end.
+            if (theNextNode != NULL){ // Ah, it seems we deleted the node we were working on. This could occur if delete is called on the info of tempNode.
+                tempNode = theNextNode;
+            } else{
+                // Well it seems there wasn't a next node present before we called the function either. We must have finished.
+                return 0;
+            }
+        }
+    }
+    // Shouldn't reach here unless tempnode was null to begin with. In which case, we have an empty queue.
     return 0;
 }
 

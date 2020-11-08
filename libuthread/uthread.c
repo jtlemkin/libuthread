@@ -55,16 +55,11 @@ void uthread_yield(void)
 
 	// General idea: Dequeue the next thread on the
 
-    struct uthread_tcb* nextThread;
-    queue_dequeue(globalQueue, (void**) &nextThread);
-
-    uthread_tcb_t* currTCBPointer = &currTCB;
-    queue_enqueue(globalQueue, currTCBPointer);
-
-
-
-    //uthread_ctx_switch(uthread_current()->uctx, currThread->uctx);
-
+	struct uthread_tcb* prevThread;
+	prevThread = currTCB;
+	queue_dequeue(globalQueue, (void**) currTCB);
+	queue_enqueue(globalQueue, prevThread);
+    uthread_ctx_switch(currTCB->uctx, prevThread->uctx);
 }
 
 void uthread_exit(void)

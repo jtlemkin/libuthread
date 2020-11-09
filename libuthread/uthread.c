@@ -7,6 +7,7 @@
 #include <sys/time.h>
 
 #include "private.h"
+#include "context.c"
 #include "uthread.h"
 #include "queue.h"
 
@@ -14,12 +15,13 @@
 
 #define STACK_SIZE 32768
 
-typedef struct uthread_tcb* uthread_tcb_t;
+typedef void (*func_t) ();
 
-uthread_tcb_t* currTCB;
+struct uthread_tcb* currTCB;
 
-static uthread_ctx_t mainContext[1];
-struct queue_t globalQueue;
+static uthread_ctx_t mainContext;
+queue_t globalQueue;
+queue_t exited_threads;
 struct uthread_tcb {
 	/* TODO Phase 2 */
 
@@ -43,6 +45,11 @@ Pointer to the Process control block (PCB) of the process that the thread lives 
     void *top_of_stack;
 };
 
+void print_add(void* data) {
+    if (data == )
+    printf("ADD %p\n", data);
+}
+
 struct uthread_tcb *uthread_current(void)
 {
 	/* TODO Phase 2 */
@@ -57,29 +64,42 @@ void uthread_yield(void)
 
 	struct uthread_tcb* prevThread;
 	prevThread = currTCB;
-	queue_dequeue(globalQueue, (void**) currTCB);
+	queue_dequeue(globalQueue, (void**) &currTCB);
+    //printf("YIELD DEQUEUE\n: %p", currTCB);
 	queue_enqueue(globalQueue, prevThread);
-    uthread_ctx_switch(currTCB->uctx, prevThread->uctx);
+    //queue_iterate(globalQueue, print_add);
+    //printf("YIELD ENQUEUE\n: %p", prevThread);
+    print_add(currTCB);
+    queue_iterate(globalQueue, print_add);
+    printf("\n");
+    uthread_ctx_switch(prevThread->uctx, currTCB->uctx);
 }
 
 void uthread_exit(void)
 {
+    printf("THREAD EXIT\n");
+
 	/* TODO Phase 2 */
+    struct uthread_tcb* prevThread;
+	prevThread = currTCB;
+	queue_dequeue(globalQueue, (void**) &currTCB);
+    queue_enqueue(exited_threads, prevThread);
+
+    uthread_ctx_switch(prevThread->uctx, currTCB->uctx);
 }
 
-uthread_tcb* tcb_create(uthread_func_t func, void *arg)
+struct uthread_tcb *tcb_create(uthread_func_t func, void *arg)
 {
+    struct uthread_tcb *z = (struct uthread_tcb*) malloc(sizeof(struct uthread_tcb));
 
-    uthread_tcb* z = (struct uthread_tcb*) malloc(sizeof(struct struct uthread_tcb));
-
-    z->top_of_stack = *uthread_ctx_alloc_stack(void);
+    z->top_of_stack = uthread_ctx_alloc_stack();
     z->state = 0;
     z->uctx = (uthread_ctx_t*) malloc(sizeof(uthread_ctx_t));
 
     getcontext(z->uctx);
     z->uctx->uc_stack.ss_sp   = z->top_of_stack;
     z->uctx->uc_stack.ss_size = STACK_SIZE;
-    makecontext(z->uctx, (func_t)func, arg);
+    makecontext(z->uctx, (func_t)func, 1, arg);
 
     return z;
 }
@@ -87,7 +107,7 @@ uthread_tcb* tcb_create(uthread_func_t func, void *arg)
 int uthread_create(uthread_func_t func, void *arg)
 {
 	/* TODO Phase 2 */
-	uthread_tcb* tempStruct = tcb_create(func, arg);
+	struct uthread_tcb *tempStruct = tcb_create(func, arg);
 	if (tempStruct == NULL){
 	    return -1;
 	}
@@ -99,24 +119,48 @@ int uthread_create(uthread_func_t func, void *arg)
     // Contain a pointer to
 }
 
-int tcb_free(uthread_tcb_t structToFree)
+void tcb_free(struct uthread_tcb *structToFree)
 {
     // free up the thread control block object
+    uthread_ctx_destroy_stack(structToFree->top_of_stack);
+    free(structToFree->uctx);
+    free(structToFree);
+}
+
+void idleFunc(void *arg){
+    struct uthread_tcb *exited_thread;
+
+    printf("IDLE FUNC\n");
+    while (queue_length(globalQueue) > 0){
+        //printf("LOOP, QUEUE LENGTH: %d\n", queue_length(globalQueue));
+        // Clean up exited threads during execution
+        while (queue_dequeue(exited_threads, (void**) &exited_thread) == 0) {
+            tcb_free(exited_thread);
+        }
+        uthread_yield();
+        // handle threads with completed execution and terminate their TCB
+    }
+
+    // Clean up any remaining threads
+    while (queue_dequeue(exited_threads, (void**) &exited_thread) == 0) {
+        tcb_free(exited_thread);
+    }
 }
 
 int uthread_start(uthread_func_t func, void *arg)
 {
 	/* TODO Phase 2 */
     globalQueue = queue_create();
-    if (uthread_create(idleFunc, void) == -1){ //
+    exited_threads = queue_create();
+    if (uthread_create(idleFunc, (void*) NULL) == -1){ //
         return -1;
     }
     if (uthread_create(func, arg) == -1){ // Create the "main" (second) thread.
         return -1;
     }
 
-    queue_dequeue(globalQueue, (void**) &currTcb);
-    uthread_ctx_switch(&mainContext[0], &(*currThread.uctx)); // Something like that.
+    queue_dequeue(globalQueue, (void**) &currTCB);
+    uthread_ctx_switch(&mainContext, currTCB->uctx); // Something like that.
     // swapcontext(&mainContext[0], &ctx[to]);
 
     // THIS
@@ -126,15 +170,6 @@ int uthread_start(uthread_func_t func, void *arg)
 
 	// Initialize the global queue of uthread_tcb objects
 	// create the intitial
-}
-
-int idleFunc(void){
-    while (queue_length(globalQueue) > 1){
-        uthread_yield();
-        // handle threads with completed execution and terminate their TCB
-    }
-    // Perform context switch to original thread
-    return 0;
 }
 
 void uthread_block(void)

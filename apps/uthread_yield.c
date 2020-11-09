@@ -15,8 +15,15 @@
 
 #include <uthread.h>
 
+void thread4(void *arg)
+{
+	uthread_yield();
+	printf("thread4\n");
+}
+
 void thread3(void *arg)
 {
+	//uthread_create(thread4, NULL);
 	uthread_yield();
 	printf("thread3\n");
 }

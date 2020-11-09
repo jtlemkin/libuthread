@@ -137,7 +137,7 @@ int queue_dequeue(queue_t queue, void **data)
     }
 
     // for debug:
-    fprintf(stderr, "*** In Dequeue ***\n");
+    //fprintf(stderr, "*** In Dequeue ***\n");
     //fprintf(stderr, "*** %d ***\n", &(queue->headNode->data));
 
     *data = queue->headNode->data; // update the void pointer to point to the data being stored. Somewhat uncertain about this due to void** shennanigans

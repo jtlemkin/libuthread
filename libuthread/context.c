@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "preempt.c"
 #include "private.h"
 #include "uthread.h"
 

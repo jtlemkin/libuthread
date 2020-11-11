@@ -43,12 +43,13 @@ int sem_down(sem_t sem)
 	    sem->intCount = sem->intCount - 1;
 	    return 0;
 	}
-    preempt_enable();
-
 
 	// We now have no need to change the internal count.
 	// If we reach this point, we should enqueue the TCB to the blocked queue, block the thread and yield.
 	queue_enqueue(sem->semQueueBlockedTCBs, uthread_current());
+
+    preempt_enable();
+    
     uthread_block(); // Block should perform the yield, and remove the TCB from the main queue.
     // Thread should continue running from here when unblocked, and should now have access to the resource.
 

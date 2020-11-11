@@ -63,11 +63,15 @@ void uthread_yield(void)
 
 	struct uthread_tcb* prevThread;
 	prevThread = currTCB;
-	queue_dequeue(globalQueue, (void**) &currTCB);
+	if (queue_dequeue(globalQueue, (void**) &currTCB) == -1) {
+        return;
+    }
     //printf("YIELD DEQUEUE\n: %p", currTCB);
 	queue_enqueue(globalQueue, prevThread);
     //queue_iterate(globalQueue, print_add);
     //printf("YIELD ENQUEUE\n: %p", prevThread);
+    // In case of global_queue being empty, prevThread and currTCB point
+    // to the same thread and no conta
     uthread_ctx_switch(prevThread->uctx, currTCB->uctx);
 }
 
@@ -77,9 +81,11 @@ void uthread_exit(void)
     //printf("THREAD EXIT\n");
 
     struct uthread_tcb* prevThread;
+    preempt_disable();
 	prevThread = currTCB;
 	queue_dequeue(globalQueue, (void**) &currTCB);
     queue_enqueue(exited_threads, prevThread);
+    preempt_enable();
 
     uthread_ctx_switch(prevThread->uctx, currTCB->uctx);
 }
@@ -110,7 +116,9 @@ int uthread_create(uthread_func_t func, void *arg)
 	if (tempStruct == NULL){
 	    return -1;
 	}
+    preempt_disable();
 	queue_enqueue(globalQueue, tempStruct);
+    preempt_enable();
 	return 0;
 
 	// Create a thread control block
@@ -130,12 +138,14 @@ void idleFunc(void *arg){
     struct uthread_tcb *exited_thread;
 
     while (queue_length(globalQueue) > 0){
-        //printf("LOOP, QUEUE LENGTH: %d\n", queue_length(globalQueue));
         // Clean up exited threads during execution
+
+        // This maybe doesn't need to stop preemption because the idlethread is
+        // the only thread that interacts with with the exited_threads queue
+        // once preemption is enabled
         while (queue_dequeue(exited_threads, (void**) &exited_thread) == 0) {
             tcb_free(exited_thread);
         }
-        //printf("IDLE FUNC\n");
         uthread_yield();
         // handle threads with completed execution and terminate their TCB
     }
@@ -178,7 +188,6 @@ int uthread_start(uthread_func_t func, void *arg)
 void uthread_block(void)
 {
 	// Should "yield" but in a manner that it is NOT adding this function to the tail of the queue.
-
     struct uthread_tcb* prevThread;
     prevThread = currTCB;
     queue_dequeue(globalQueue, (void**) &currTCB);
@@ -190,12 +199,15 @@ void uthread_block(void)
     //printf("NEW QUEUE: \n");
     //queue_iterate(globalQueue, print_add);
     //printf("\n");
+    preempt_enable();
     uthread_ctx_switch(prevThread->uctx, currTCB->uctx); // Change execution. The thread that was blocked has been removed from the queue.
 }
 
 void uthread_unblock(struct uthread_tcb *uthread)
 {
 	// enqueue a TCB that was previously removed.
+    preempt_disable();
     queue_enqueue(globalQueue, uthread);
+    preempt_enable();
 }
 

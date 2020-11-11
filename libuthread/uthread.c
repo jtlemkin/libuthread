@@ -23,7 +23,6 @@ static uthread_ctx_t mainContext;
 queue_t globalQueue;
 queue_t exited_threads;
 struct uthread_tcb {
-	/* TODO Phase 2 */
 
 	/*
 	 * An example of information contained within a TCB is:
@@ -51,14 +50,11 @@ Pointer to the Process control block (PCB) of the process that the thread lives 
 
 struct uthread_tcb *uthread_current(void)
 {
-	/* TODO Phase 2 */
 	return currTCB;
 }
 
 void uthread_yield(void)
 {
-	/* TODO Phase 2 */
-
 	// General idea: Dequeue the next thread on the
 
     /*print_add(currTCB);
@@ -77,7 +73,12 @@ void uthread_yield(void)
 
 void uthread_exit(void)
 {
+<<<<<<< HEAD
 	/* TODO Phase 2 */
+=======
+    printf("THREAD EXIT\n");
+
+>>>>>>> 61a1bb04ec12e638ee8c294db2a7d8244f3cfbed
     struct uthread_tcb* prevThread;
 	prevThread = currTCB;
 	queue_dequeue(globalQueue, (void**) &currTCB);
@@ -108,7 +109,6 @@ struct uthread_tcb *tcb_create(uthread_func_t func, void *arg)
 
 int uthread_create(uthread_func_t func, void *arg)
 {
-	/* TODO Phase 2 */
 	struct uthread_tcb *tempStruct = tcb_create(func, arg);
 	if (tempStruct == NULL){
 	    return -1;
@@ -151,7 +151,6 @@ void idleFunc(void *arg){
 
 int uthread_start(uthread_func_t func, void *arg)
 {
-	/* TODO Phase 2 */
     globalQueue = queue_create();
     exited_threads = queue_create();
     if (uthread_create(idleFunc, (void*) NULL) == -1){ //
@@ -176,11 +175,25 @@ int uthread_start(uthread_func_t func, void *arg)
 
 void uthread_block(void)
 {
-	/* TODO Phase 2/3 */
+	// Should "yield" but in a manner that it is NOT adding this function to the tail of the queue.
+
+    struct uthread_tcb* prevThread;
+    prevThread = currTCB;
+    queue_dequeue(globalQueue, (void**) &currTCB);
+    //queue_iterate(globalQueue, print_add);
+    //printf("YIELD ENQUEUE\n: %p", prevThread);
+
+    printf("BLOCKED THREAD: \n");
+    print_add(prevThread);
+    printf("NEW QUEUE: \n");
+    queue_iterate(globalQueue, print_add);
+    printf("\n");
+    uthread_ctx_switch(prevThread->uctx, currTCB->uctx); // Change execution. The thread that was blocked has been removed from the queue.
 }
 
 void uthread_unblock(struct uthread_tcb *uthread)
 {
-	/* TODO Phase 2/3 */
+	// enqueue a TCB that was previously removed.
+    queue_enqueue(globalQueue, uthread);
 }
 

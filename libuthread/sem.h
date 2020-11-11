@@ -15,6 +15,8 @@
  */
 typedef struct semaphore *sem_t;
 
+// We need to disable premption before
+
 /*
  * sem_create - Create semaphore
  * @count: Semaphore count

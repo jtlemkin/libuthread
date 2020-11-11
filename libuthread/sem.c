@@ -67,7 +67,7 @@ int sem_up(sem_t sem)
 	if (queue_length(sem->semQueueBlockedTCBs) >= 1){
         struct uthread_tcb* unblockedTCB;
         queue_dequeue(sem->semQueueBlockedTCBs, (void**) &unblockedTCB); // Dequeue the TCB into currTCB
-        uthread_unblock(unblockedTCBTCB); // Unblock the oldest TCB in the queue of blocked TCBs. Unblock should place the TCB back into the main queue.
+        uthread_unblock(unblockedTCB); // Unblock the oldest TCB in the queue of blocked TCBs. Unblock should place the TCB back into the main queue.
         sem->intCount -= 1; // This is where the magic happens. Access to the semaphore is RESERVED for the blocked thread placed back into the queue. If another thread attempts to get access to the reserved resource, they will be placed in the semaphore queue in order to access it later.
 	}
     preempt_enable(void);

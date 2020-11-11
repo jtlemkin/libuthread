@@ -45,10 +45,9 @@ Pointer to the Process control block (PCB) of the process that the thread lives 
     void *top_of_stack;
 };
 
-void print_add(void* data) {
-    if (data == )
+/*void print_add(void* data) {
     printf("ADD %p\n", data);
-}
+}*/
 
 struct uthread_tcb *uthread_current(void)
 {
@@ -62,6 +61,10 @@ void uthread_yield(void)
 
 	// General idea: Dequeue the next thread on the
 
+    /*print_add(currTCB);
+    queue_iterate(globalQueue, print_add);
+    printf("\n");*/
+
 	struct uthread_tcb* prevThread;
 	prevThread = currTCB;
 	queue_dequeue(globalQueue, (void**) &currTCB);
@@ -69,16 +72,11 @@ void uthread_yield(void)
 	queue_enqueue(globalQueue, prevThread);
     //queue_iterate(globalQueue, print_add);
     //printf("YIELD ENQUEUE\n: %p", prevThread);
-    print_add(currTCB);
-    queue_iterate(globalQueue, print_add);
-    printf("\n");
     uthread_ctx_switch(prevThread->uctx, currTCB->uctx);
 }
 
 void uthread_exit(void)
 {
-    printf("THREAD EXIT\n");
-
 	/* TODO Phase 2 */
     struct uthread_tcb* prevThread;
 	prevThread = currTCB;
@@ -91,15 +89,19 @@ void uthread_exit(void)
 struct uthread_tcb *tcb_create(uthread_func_t func, void *arg)
 {
     struct uthread_tcb *z = (struct uthread_tcb*) malloc(sizeof(struct uthread_tcb));
-
     z->top_of_stack = uthread_ctx_alloc_stack();
+    z->state = 0;
+    z->uctx = (uthread_ctx_t*) malloc(sizeof(uthread_ctx_t));
+    uthread_ctx_init(z->uctx, z->top_of_stack, func, arg);
+
+    /*z->top_of_stack = uthread_ctx_alloc_stack();
     z->state = 0;
     z->uctx = (uthread_ctx_t*) malloc(sizeof(uthread_ctx_t));
 
     getcontext(z->uctx);
     z->uctx->uc_stack.ss_sp   = z->top_of_stack;
     z->uctx->uc_stack.ss_size = STACK_SIZE;
-    makecontext(z->uctx, (func_t)func, 1, arg);
+    makecontext(z->uctx, (func_t)func, 1, arg);*/
 
     return z;
 }
@@ -130,13 +132,13 @@ void tcb_free(struct uthread_tcb *structToFree)
 void idleFunc(void *arg){
     struct uthread_tcb *exited_thread;
 
-    printf("IDLE FUNC\n");
     while (queue_length(globalQueue) > 0){
         //printf("LOOP, QUEUE LENGTH: %d\n", queue_length(globalQueue));
         // Clean up exited threads during execution
         while (queue_dequeue(exited_threads, (void**) &exited_thread) == 0) {
             tcb_free(exited_thread);
         }
+        //printf("IDLE FUNC\n");
         uthread_yield();
         // handle threads with completed execution and terminate their TCB
     }

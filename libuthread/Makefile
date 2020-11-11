@@ -1,7 +1,7 @@
 # Target library
 lib := libuthread.a
 # Object files
-objs := queue.o uthread.o
+objs := queue.o uthread.o sem.o
 
 # Define compilation toolchain
 CC	= gcc

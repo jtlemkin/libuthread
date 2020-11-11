@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "private.h"
 #include "uthread.h"
@@ -15,23 +16,51 @@
  */
 #define HZ 100
 
+struct sigaction sa;
+static bool p_enabled = false;
+
 void preempt_disable(void)
 {
-	/* TODO Phase 4 */
+	printf("Prempt disabled\n");
+	p_enabled = false;
 }
 
 void preempt_enable(void)
 {
-	/* TODO Phase 4 */
+	printf("Prempt enabled\n");
+	p_enabled = true;
+}
+
+void alarm_handler(int signum)
+{
+	printf("Tick\n");
+
+	// Only yield if interrupts enabled
+	if (p_enabled) {
+		uthread_yield();
+	}
+
+	// Perpetuate this so even if p_enabled is temporary false
+	// that the timer isn't killed
+	alarm(1/HZ);
 }
 
 void preempt_start(void)
 {
-	/* TODO Phase 4 */
+	printf("Starting alarm\n");
+	sa.sa_handler = &alarm_handler;
+	// sa_mask specifies a mask of signals that should blocked
+	// sigemptyset empties the mask so no signals are blocked
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGVTALRM, &sa, NULL); //signal handler is called on alarm
+
+	alarm(1/HZ);
 }
 
 void preempt_stop(void)
 {
-	/* TODO Phase 4 */
+	printf("Stopping alarm\n");
+	sa.sa_handler = NULL;
 }
 

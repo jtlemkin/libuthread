@@ -44,9 +44,9 @@ Pointer to the Process control block (PCB) of the process that the thread lives 
     void *top_of_stack;
 };
 
-/*void print_add(void* data) {
+void print_add(void* data) {
     printf("ADD %p\n", data);
-}*/
+}
 
 struct uthread_tcb *uthread_current(void)
 {
@@ -73,12 +73,9 @@ void uthread_yield(void)
 
 void uthread_exit(void)
 {
-<<<<<<< HEAD
 	/* TODO Phase 2 */
-=======
-    printf("THREAD EXIT\n");
+    //printf("THREAD EXIT\n");
 
->>>>>>> 61a1bb04ec12e638ee8c294db2a7d8244f3cfbed
     struct uthread_tcb* prevThread;
 	prevThread = currTCB;
 	queue_dequeue(globalQueue, (void**) &currTCB);
@@ -161,9 +158,14 @@ int uthread_start(uthread_func_t func, void *arg)
     }
 
     queue_dequeue(globalQueue, (void**) &currTCB);
+
+    preempt_start();
+
+    // Our threads start running after this call
     uthread_ctx_switch(&mainContext, currTCB->uctx); // Something like that.
     // swapcontext(&mainContext[0], &ctx[to]);
 
+    preempt_stop();
     // THIS
     return 0;
     // Create a thread with which to place in the queue. using uthread_create
@@ -183,11 +185,11 @@ void uthread_block(void)
     //queue_iterate(globalQueue, print_add);
     //printf("YIELD ENQUEUE\n: %p", prevThread);
 
-    printf("BLOCKED THREAD: \n");
-    print_add(prevThread);
-    printf("NEW QUEUE: \n");
-    queue_iterate(globalQueue, print_add);
-    printf("\n");
+    //printf("BLOCKED THREAD: \n");
+    //print_add(prevThread);
+    //printf("NEW QUEUE: \n");
+    //queue_iterate(globalQueue, print_add);
+    //printf("\n");
     uthread_ctx_switch(prevThread->uctx, currTCB->uctx); // Change execution. The thread that was blocked has been removed from the queue.
 }
 

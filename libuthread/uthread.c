@@ -136,16 +136,16 @@ void tcb_free(struct uthread_tcb *structToFree)
 
 void idleFunc(void *arg){
     struct uthread_tcb *exited_thread;
+    int result;
 
     while (queue_length(globalQueue) > 0){
         // Clean up exited threads during execution
-
-        // This maybe doesn't need to stop preemption because the idlethread is
-        // the only thread that interacts with with the exited_threads queue
-        // once preemption is enabled
-        while (queue_dequeue(exited_threads, (void**) &exited_thread) == 0) {
+        do {
+            preempt_disable();
+            result = queue_dequeue(exited_threads, (void**) &exited_thread);
+            preempt_enable();
             tcb_free(exited_thread);
-        }
+        } while(result == 0);
         uthread_yield();
         // handle threads with completed execution and terminate their TCB
     }

@@ -309,10 +309,44 @@ void test_iterate_simple(void)
     }
 }
 
+queue_t q;
+
+/* Callback function that increments items */
+static void inc_item(void *data)
+{
+    int *a = (int*)data;
+    if (*a == 5)
+        queue_delete(q, data);
+    else
+        *a += 1;
+}
+
+void test_iterator(void)
+{
+    int data[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    int i;
+
+    /* Initialize the queue and enqueue items */
+    q = queue_create();
+    for (i = 0; i < sizeof(data) / sizeof(data[0]); i++)
+        queue_enqueue(q, &data[i]);
+
+    /* Increment every item of the queue, delete item '5' */
+    queue_iterate(q, inc_item);
+    assert(data[0] == 2);
+    assert(queue_length(q) == 9);
+}
+
 queue_t global_q;
 
+void print_add(void* ptr) {
+    printf("add: %p\n", ptr);
+}
+
 void delete_head(void* ptr) {
+    printf("ptr: %p\n", ptr);
     int *a = (int*) ptr;
+    printf("a: %d\n", *a);
     if (*a == 1) {
         queue_delete(global_q, a);
     }
@@ -347,15 +381,19 @@ void test_iterate_delete(queue_func_t func)
     int i, j;
     int *ptr;
 
-    fprintf(stderr, "\n\n*** TEST iterate delete ***\n\n\n");
     // Test each of the delete functions
     for (j = 0; j < 4; ++j) {
         global_q = queue_create();
 
         for (i = 0; i < 3; ++i) {
-            queue_enqueue(global_q, data + i);
+            queue_enqueue(global_q, &(data[i]));
         }
 
+        queue_iterate(global_q, &print_add);
+        printf("\n");
+        printf("\n");
+        printf("\n");
+        //queue_iterate()
         queue_iterate(global_q, func);
 
         for (i = 0; i < 2; ++i) {
@@ -369,7 +407,7 @@ void test_iterate_delete(queue_func_t func)
 
 void test_iterate_delete_head(void) {
     fprintf(stderr, "\n\n*** TEST iterate delete HEAD ***\n\n\n");
-    test_iterate_delete(&delete_head);
+    //test_iterate_delete(&delete_head);
 }
 
 void test_iterate_delete_tail(void){
@@ -455,7 +493,7 @@ void test_queue_complex(void)
 
 int main(void)
 {
-    test_create();
+    /*test_create();
     test_destroy();
     test_destroy_null();
     test_destroy_not_empty();
@@ -472,17 +510,17 @@ int main(void)
     test_delete_head();
     test_delete_tail();
     test_iterate_null();
-    test_iterate_function_null();
     test_iterate_simple();
-    test_iterate_function_null();
-    test_iterate_delete_head();
+    test_iterate_function_null();*/
+    test_iterator();
+    /*test_iterate_delete_head();
     test_iterate_delete_tail();
     test_iterate_delete_mid();
     test_iterate_delete_next();
     test_length_null();
     test_length_simple();
     test_queue_simple();
-    test_queue_complex();
+    test_queue_complex();*/
 
     return 0;
 }

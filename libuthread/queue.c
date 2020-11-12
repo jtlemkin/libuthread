@@ -22,36 +22,13 @@ struct queue {
 queue_t queue_create(void)
 {
     // Will need to malloc data for the queue.
-    struct queue* newQueue = (struct queue*) malloc(sizeof(struct queue));
-    newQueue->head_node = NULL;
-    newQueue->tail_node = NULL;
-    newQueue->length = 0;
-    return newQueue;
+    struct queue* new_queue = (struct queue*) malloc(sizeof(struct queue));
+    new_queue->head_node = NULL;
+    new_queue->tail_node = NULL;
+    new_queue->length = 0;
+    return new_queue;
 
-    // If malloc fails newQueue should be null. (Malloc returns null)
-}
-
-int queue_dequeueNoCollect(queue_t queue)
-{
-    if (queue->head_node == NULL){
-        return -1; // Cannot dequeue, queue is empty.
-    }
-
-    queue->head_node->data = NULL;
-
-    // Store old head temporarily
-    struct queue_node* old_head = queue->head_node;
-    // Adjust queue to account for removal of the old head
-    queue->head_node = queue->head_node->next;
-
-    if (queue->head_node == NULL){
-        // Seems that was the last node. Set the queue to the empty state
-        queue->tail_node = NULL;
-    }
-
-    free(old_head); // Delete the old node's data in memory.
-    return 0;
-
+    // If malloc fails new_queue should be null. (Malloc returns null)
 }
 
 int queue_destroy(queue_t queue)
@@ -153,6 +130,7 @@ int queue_delete(queue_t queue, void *data)
                 // Case in which the head is the node with data to delete. 
                 // Overwrite.
                 queue->head_node = queue->head_node->next;
+
             } else {
                 // Adjust queue structure, skipping over the node that we found 
                 // the data at.
@@ -178,17 +156,6 @@ int queue_delete(queue_t queue, void *data)
     return -1; // Data not found in any of the nodes.
 }
 
-// Deallocates the memory of a queue even if non-empty
-int queue_free(queue_t queue) {
-    void *ptr;
-
-    // Empty the queue
-    while (queue_dequeue(queue, &ptr) != -1);
-
-    // Then destroy
-    return queue_destroy(queue);
-}
-
 int queue_iterate(queue_t queue, queue_func_t func)
 {
     if (queue == NULL || func == NULL){
@@ -197,16 +164,20 @@ int queue_iterate(queue_t queue, queue_func_t func)
 
     struct queue_node* curr_node = queue->head_node;
     struct queue_node* next_node = NULL;
-    while (curr_node != NULL){
+    while (curr_node){
+        printf("Curr %p\n", curr_node);
         next_node = curr_node->next; // Store next node prior to editing.
         func(curr_node->data); // Call the function on the data
-        if (curr_node->next != NULL) {
+        printf("Call\n");
+        if (curr_node->next) {
+            printf("Next %p\n", curr_node->next);
             curr_node = curr_node->next; // Then move on.
         } else {
+            printf("No next\n");
             // If there is no longer a next node, this can mean a few things. 
             // We could either have deleted the current node, or we may have 
             // reached the end.
-            if (next_node != NULL) { 
+            if (next_node) { 
                 // Ah, it seems we deleted the node we were working on. This 
                 // could occur if delete is called on the info of curr_node.
                 curr_node = next_node;

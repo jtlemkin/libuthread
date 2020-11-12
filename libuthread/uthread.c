@@ -29,17 +29,14 @@ queue_t exited_threads;
  * Thread Identifier: Unique id (tid) is assigned to every new thread
  * Stack pointer: Points to thread's stack in the process
  * Program counter: Points to the current program instruction of the thread
- * State of the thread (running, ready, waiting, start, done)
  * Thread's register values
  * Pointer to the Process control block (PCB) of the process that the thread 
  * lives on
 */
 
-// A state
 // A backup of registers
 // a stack
 struct uthread_tcb {
-	int state;
 	uthread_ctx_t *uctx;
     void *top_of_stack;
 };
@@ -86,7 +83,6 @@ struct uthread_tcb *tcb_create(uthread_func_t func, void *arg)
 {
     struct uthread_tcb *z = (struct uthread_tcb*) malloc(sizeof(struct uthread_tcb));
     z->top_of_stack = uthread_ctx_alloc_stack();
-    z->state = 0;
     z->uctx = (uthread_ctx_t*) malloc(sizeof(uthread_ctx_t));
     uthread_ctx_init(z->uctx, z->top_of_stack, func, arg);
 

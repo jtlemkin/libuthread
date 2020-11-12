@@ -6,15 +6,16 @@
 #include "queue.h"
 
 
-struct queueNode {
+struct queue_node {
     void* data;
-    struct queueNode* nextNode;
+    struct queue_node* next;
 };
 
 struct queue {
-    // Enqueue adds to tail, dequeue removes head and outputs data via passed pointer.
-    struct queueNode* headNode;
-    struct queueNode* tailNode;
+    // Enqueue adds to tail, dequeue removes head and outputs data via passed 
+    // pointer.
+    struct queue_node* head_node;
+    struct queue_node* tail_node;
     int length;
 };
 
@@ -22,8 +23,8 @@ queue_t queue_create(void)
 {
     // Will need to malloc data for the queue.
     struct queue* newQueue = (struct queue*) malloc(sizeof(struct queue));
-    newQueue->headNode = NULL;
-    newQueue->tailNode = NULL;
+    newQueue->head_node = NULL;
+    newQueue->tail_node = NULL;
     newQueue->length = 0;
     return newQueue;
 
@@ -32,24 +33,23 @@ queue_t queue_create(void)
 
 int queue_dequeueNoCollect(queue_t queue)
 {
-    if (queue->headNode == NULL){
+    if (queue->head_node == NULL){
         return -1; // Cannot dequeue, queue is empty.
     }
 
-    // for debug:
-    fprintf(stderr, "*** DEBUG deQueueNoCollect ***\n");
-    //fprintf(stderr, "*** %d ***\n", *(queue->headNode->data));
+    queue->head_node->data = NULL;
 
-    queue->headNode->data = NULL;
+    // Store old head temporarily
+    struct queue_node* old_head = queue->head_node;
+    // Adjust queue to account for removal of the old head
+    queue->head_node = queue->head_node->next;
 
-    struct queueNode* tempHead = queue->headNode; // Store old head temporarily
-    queue->headNode = queue->headNode->nextNode; // Adjust queue to account for removal of the old head
-
-    if (queue->headNode == NULL){
-        queue->tailNode = NULL; // Seems that was the last node. Set the queue to the empty state
+    if (queue->head_node == NULL){
+        // Seems that was the last node. Set the queue to the empty state
+        queue->tail_node = NULL;
     }
 
-    free(tempHead); // Delete the old node's data in memory.
+    free(old_head); // Delete the old node's data in memory.
     return 0;
 
 }
@@ -63,37 +63,18 @@ int queue_destroy(queue_t queue)
 
     free(queue);
     return 0; // Success.
-
-/*
- *
- *
-    // Involves freeing up all the data in the queue.
-    // recursively call dequeue like operation to clear all the nodes contained within the queue, then free the queue.
-
-    int i = 0;
-    while (i == 0){
-        i = queue_dequeueNoCollect(queue); // Remove nodes (freeing them) until we have none left
-    }
-    queue->headNode = NULL;
-    queue->tailNode = NULL;
-
-    free(queue);
-
-    return 0; // Success.
-*/
-// Seems we do not need to clear the nodes from the queue if it is not already empty. Misinterpreted the function. Only destroy the queue if it is empty.
 }
 
-struct queueNode *node_create(void* data) {
+struct queue_node *node_create(void* data) {
     // Create a new node:
-    struct queueNode* node = (struct queueNode*) malloc(sizeof(struct queueNode));
+    struct queue_node* node = (struct queue_node*) malloc(sizeof(struct queue_node));
     if (node == NULL){
         // Malloc failed.
         return NULL;
     }
-    node->data = data; // Set the data pointer of the node to point at the address of the input data. (Only way I can think to handle void* style data input)
-    // May need to reference the discussion from last week to ensure this is working properly. Proper approach might be: newNode.data = &data;
-    node->nextNode = NULL;
+    // Set the data pointer of the node to point at the address of the input data.
+    node->data = data;
+    node->next = NULL;
 
     return node;
 }
@@ -105,7 +86,7 @@ int queue_enqueue(queue_t queue, void *data)
     }
 
     // Create a new node:
-    struct queueNode* newNode = node_create(data);
+    struct queue_node* newNode = node_create(data);
 
     if (!newNode) {
         // Malloc issue
@@ -115,18 +96,18 @@ int queue_enqueue(queue_t queue, void *data)
     if (queue->length == 0) {
         // If we need to initialize the queue with the first bit of data, we 
         // have to set both the head and tail equal to the same new node.
-        queue->tailNode = newNode;
-        queue->headNode = newNode;
+        queue->tail_node = newNode;
+        queue->head_node = newNode;
     } else {
         // If containing nodes already, set the tail's next node to be equal to 
         // the newly created node, then set the new node as the new tail
-        queue->tailNode->nextNode = newNode;
-        queue->tailNode = newNode;
+        queue->tail_node->next = newNode;
+        queue->tail_node = newNode;
     }
 
     queue->length += 1;
 
-    return 0; // Sucess
+    return 0; // Success
 
 }
 
@@ -136,71 +117,66 @@ int queue_dequeue(queue_t queue, void **data)
         return -1; // Cannot dequeue, queue is null.
     }
 
-    // for debug:
-    //fprintf(stderr, "*** In Dequeue ***\n");
-    //fprintf(stderr, "*** %d ***\n", &(queue->headNode->data));
-
-    *data = queue->headNode->data; // update the void pointer to point to the data being stored. Somewhat uncertain about this due to void** shennanigans
-
-    struct queueNode* tempHead = queue->headNode; // Store old head temporarily
-    queue->headNode = queue->headNode->nextNode; // Adjust queue to account for removal of the old head
+    // Update the void pointer to point to the data being stored.
+    *data = queue->head_node->data;
+    // Store old head temporarily
+    struct queue_node* old_head = queue->head_node;
+    // Adjust queue to account for removal of the old head
+    queue->head_node = queue->head_node->next;
     queue->length -= 1;
 
     if (queue->length == 0){
-        queue->tailNode = NULL; // Seems that was the last node. Set the queue to the empty state
+        // Seems that was the last node. Set the queue to the empty state
+        queue->tail_node = NULL;
     }
 
-    free(tempHead); // Delete the old node's data in memory.
+    free(old_head); // Delete the old node's data in memory.
     return 0;
 
 }
 
 int queue_delete(queue_t queue, void *data)
 {
-    // Gameplan: Start at the head of the queue, work towards the tail, checking to see if the data matches.
+    // Gameplan: Start at the head of the queue, work towards the tail, 
+    // checking to see if the data matches.
 
-    if (queue == NULL || data == NULL || queue->length == 0){
+    if (!queue || !data || !queue->length){
         return -1; // Cannot dequeue, queue is null.
     }
 
-    struct queueNode* tempNode = queue->headNode;
-    struct queueNode* priorNode = NULL;
+    struct queue_node* curr_node = queue->head_node;
+    struct queue_node* priorNode = NULL;
 
-    while (tempNode != NULL){ // Should handle case of a null queue appropriately.
-        // I'm pretty sure we want to do a comparison in the following manner: if (*(tempNode->data) == *data) ... But this doesn't seem to work. How do we compare the data of void pointers?
-        if (tempNode->data == data){ // I think this should work?
-            //fprintf(stderr, "*** %d ***\n", &(tempNode->data));
-            fprintf(stderr, "*** Match found, attempting deletion ***\n");
+    while (curr_node != NULL){ // Should handle case of a null queue appropriately.
+        if (curr_node->data == data) { 
             if (priorNode == NULL){
-                queue->headNode = queue->headNode->nextNode; // Case in which the head is the node with data to delete. Overwrite.
+                // Case in which the head is the node with data to delete. 
+                // Overwrite.
+                queue->head_node = queue->head_node->next;
             } else {
-                priorNode->nextNode = tempNode->nextNode; // Adjust queue structure, skipping over the node that we found the data at.
-                if (priorNode->nextNode == NULL){
-                    queue->tailNode = priorNode; // Case in which we have just deleted the tail. Set the prior node to be the tail.
+                // Adjust queue structure, skipping over the node that we found 
+                // the data at.
+                priorNode->next = curr_node->next;
+                if (priorNode->next == NULL){
+                    // Case in which we have just deleted the tail. Set the 
+                    // prior node to be the tail.
+                    queue->tail_node = priorNode;
                 }
             }
-            free(tempNode); // Given that we have removed the tempNode from the queue, we can free it.
+            // Given that we have removed the curr_node from the queue, we can 
+            // free it.
+            free(curr_node);
             queue->length -= 1;
             return 0;
         }
-        priorNode = tempNode; // If the data was not present at the tempNode we examined, store it as the previous node we looked at and proceed.
-        tempNode = tempNode->nextNode; // Adjust temp node as we move through the linked list
+        // If the data was not present at the curr_node we examined, store it as 
+        // the previous node we looked at and proceed.
+        priorNode = curr_node;
+        // Adjust temp node as we move through the linked list
+        curr_node = curr_node->next;
     }
     return -1; // Data not found in any of the nodes.
 }
-/*
-queue_t queue_copy(queue_t queue) {
-    queue_t new_queue = queue_create();
-    struct queueNode *current = queue->headNode;
-
-    while (current) {
-        queue_enqueue(new_queue, current->data);
-        current = current->nextNode;
-    }
-
-    return new_queue;
-}
- */
 
 // Deallocates the memory of a queue even if non-empty
 int queue_free(queue_t queue) {
@@ -212,65 +188,37 @@ int queue_free(queue_t queue) {
     // Then destroy
     return queue_destroy(queue);
 }
-/*
+
 int queue_iterate(queue_t queue, queue_func_t func)
 {
-    // Consider making a copy of the queue in order to prevent things from being deleted as you are iterating through it and causing problems.
-    // Attempting this method first, will test to see if it functions correctly:
-
-    // A thought: Perhaps it is only necessary to make a copy if we are using a non linked listed implementation? IE, if we had attempted at the start to iterate using the length of the original array as an index
-    // We should be fine. Going to test this:
-
-    if (queue == NULL || func == NULL){
-        return -1; // Cannot perform action, queue is null.
-    }
-
-    // Create a copy so that no matter what, the func is called on every
-    // node, even if it is deleted before we get to it
-    queue_t copy = queue_copy(queue);
-    struct queueNode *current = copy->headNode;
-
-    while (current) {
-        func(current->data);
-        current = current->nextNode;
-    }
-
-    queue_free(copy);
-
-    return 0;
-}
- */
-
-// Reinstating old version of iterate.
-int queue_iterate(queue_t queue, queue_func_t func)
-{
-    // Consider making a copy of the queue in order to prevent things from being deleted as you are iterating through it and causing problems.
-    // Attempting this method first, will test to see if it functions correctly:
-    // A thought: Perhaps it is only necessary to make a copy if we are using a non linked listed implementation? IE, if we had attempted at the start to iterate using the length of the original array as an index
-    // We should be fine. Going to test this:
     if (queue == NULL || func == NULL){
         return -1; // Cannot perform action, queue or func is null.
     }
 
-    struct queueNode* tempNode = queue->headNode;
-    //struct queueNode* priorNode = NULL;
-    struct queueNode* theNextNode = NULL;
-    while (tempNode != NULL){
-        theNextNode = tempNode->nextNode; // Store next node prior to editing.
-        func(tempNode->data); // Call the function on the data
-        if (tempNode->nextNode != NULL) {
-            //priorNode = tempNode;
-            tempNode = tempNode->nextNode; // Then move on.
-        } else{ // If there is no longer a next node, this can mean a few things. We could either have deleted the current node, or we may have reached the end.
-            if (theNextNode != NULL){ // Ah, it seems we deleted the node we were working on. This could occur if delete is called on the info of tempNode.
-                tempNode = theNextNode;
-            } else{
-                // Well it seems there wasn't a next node present before we called the function either. We must have finished.
+    struct queue_node* curr_node = queue->head_node;
+    struct queue_node* next_node = NULL;
+    while (curr_node != NULL){
+        next_node = curr_node->next; // Store next node prior to editing.
+        func(curr_node->data); // Call the function on the data
+        if (curr_node->next != NULL) {
+            curr_node = curr_node->next; // Then move on.
+        } else {
+            // If there is no longer a next node, this can mean a few things. 
+            // We could either have deleted the current node, or we may have 
+            // reached the end.
+            if (next_node != NULL) { 
+                // Ah, it seems we deleted the node we were working on. This 
+                // could occur if delete is called on the info of curr_node.
+                curr_node = next_node;
+            } else { 
+                // Well it seems there wasn't a next node present before we 
+                // called the function either. We must have finished.
                 return 0;
             }
         }
     }
-    // Shouldn't reach here unless tempnode was null to begin with. In which case, we have an empty queue.
+    // Shouldn't reach here unless curr_node was null to begin with. In which 
+    // case, we have an empty queue.
     return 0;
 }
 

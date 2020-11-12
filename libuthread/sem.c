@@ -9,32 +9,32 @@
 
 struct semaphore {
     // A semaphore should consist of an internal count, and a queue to store
-	/* TODO Phase 3 */
-	int intCount; // should be size_t?
-    queue_t semQueueBlockedTCBs;
+	size_t res_count;
+    queue_t blocked_threads;
 
 };
 
-sem_t sem_create(size_t count) // Potential unhandled problem with sem_create(NULL)?
+sem_t sem_create(size_t count)
 {
     // Will need to malloc data for the queue.
-    struct semaphore* newSemaphore = (struct semaphore*) malloc(sizeof(struct semaphore));
-    newSemaphore->intCount = count;
-    newSemaphore->semQueueBlockedTCBs = queue_create();
-    return newSemaphore;
+    struct semaphore* sem = (struct semaphore*) malloc(sizeof(struct semaphore));
+    sem->res_count = count;
+    sem->blocked_threads = queue_create();
+    return sem;
 }
 
 int sem_destroy(sem_t sem)
 {
-    if (sem == NULL){
-        return -1; // Semaphore is null. Cannot perform this action
+    if (!sem){
+        // Semaphore is null. Cannot perform this action
+        return -1;
     }
     preempt_disable();
-    if (queue_length(sem->semQueueBlockedTCBs) >= 1){
+    if (queue_length(sem->blocked_threads) >= 1){
         preempt_enable();
-        return -1; // Different problem. Still have blocked threads.
+        return -1;
     }
-    queue_destroy(sem->semQueueBlockedTCBs);
+    queue_destroy(sem->blocked_threads);
     free(sem);
     preempt_enable();
     return 0;
@@ -42,46 +42,51 @@ int sem_destroy(sem_t sem)
 
 int sem_down(sem_t sem)
 {
-    assert(sem->intCount >= 0);
+    assert(sem->res_count >= 0);
 
-    //printf("DOWN\n");
     preempt_disable();
     // Critical section
-	if (sem->intCount >= 1){ // If resources are available, continue.
-        //printf("DOWN SUCCESSFUL\n");
-	    sem->intCount = sem->intCount - 1;
+	if (sem->res_count >= 1){ // If resources are available, continue.
+	    sem->res_count = sem->res_count - 1;
         preempt_enable();
 	    return 0;
 	}
 
-    //printf("DOWN BLOCK\n");
-
 	// We now have no need to change the internal count.
-	// If we reach this point, we should enqueue the TCB to the blocked queue, block the thread and yield.
-	queue_enqueue(sem->semQueueBlockedTCBs, uthread_current());
+	// If we reach this point, we should enqueue the TCB to the blocked queue, 
+    // block the thread and yield.
+	queue_enqueue(sem->blocked_threads, uthread_current());
     
-    uthread_block(); // Block should perform the yield, and remove the TCB from the main queue.
-    // Thread should continue running from here when unblocked, and should now have access to the resource.
-    //printf("DOWN CONTINUE\n");
-    // We could call sem_down(sem) here if we wanted to perform a check again, but we should instead handle sem_up and unblocking carefully in order to prevent starvation of this thread.
+    // Block should perform the yield, and remove the TCB from the main queue.
+    uthread_block();
+    // Thread should continue running from here when unblocked, and should now 
+    // have access to the resource.
+    // We could call sem_down(sem) here if we wanted to perform a check again, 
+    // but we should instead handle sem_up and unblocking carefully in order to 
+    // prevent starvation of this thread.
     return 0;
 }
 
 int sem_up(sem_t sem)
 {
-    //printf("UP\n");
 	if (sem == NULL) {
 	    return -1;
 	}
     preempt_disable();
     // Critical section
-    sem->intCount += 1;
-	if (queue_length(sem->semQueueBlockedTCBs) >= 1){
-        struct uthread_tcb* unblockedTCB;
-        queue_dequeue(sem->semQueueBlockedTCBs, (void**) &unblockedTCB); // Dequeue the TCB into currTCB
-        uthread_unblock(unblockedTCB); // Unblock the oldest TCB in the queue of blocked TCBs. Unblock should place the TCB back into the main queue.
-        sem->intCount -= 1; // This is where the magic happens. Access to the semaphore is RESERVED for the blocked thread placed back into the queue. If another thread attempts to get access to the reserved resource, they will be placed in the semaphore queue in order to access it later.
-        //printf("DEQUEUED tcb\n");
+    sem->res_count += 1;
+	if (queue_length(sem->blocked_threads) >= 1){
+        struct uthread_tcb* released_thread;
+        // Dequeue the TCB into currTCB
+        queue_dequeue(sem->blocked_threads, (void**) &released_thread);
+        // Unblock the oldest TCB in the queue of blocked TCBs. 
+        // Unblock should place the TCB back into the main queue.
+        uthread_unblock(released_thread);
+        // This is where the magic happens. Access to the semaphore is RESERVED 
+        // for the blocked thread placed back into the queue. If another thread 
+        // attempts to get access to the reserved resource, they will be placed 
+        // in the semaphore queue in order to access it later.
+        sem->res_count -= 1;
 	}
     preempt_enable();
 	return 0;

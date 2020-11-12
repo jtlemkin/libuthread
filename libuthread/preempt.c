@@ -25,7 +25,6 @@ struct itimerval timer;
 void preempt_disable(void)
 {
 	int result;
-	//printf("P-disable\n");
 	// Initialize set for use in enable and disable
 	sigset_t set;
 	sigemptyset(&set);
@@ -37,7 +36,6 @@ void preempt_disable(void)
 void preempt_enable(void)
 {
 	int result;
-	//printf("P-enable\n");
 	// Initialize set for use in enable and disable
 	sigset_t set;
 	sigemptyset(&set);
@@ -53,14 +51,14 @@ void alarm_handler(int signum)
 
 void preempt_start(void)
 {
-	//printf("Starting alarm\n");
 	struct sigaction sa;
 	sa.sa_handler = alarm_handler;
 	// sa_mask specifies a mask of signals that should blocked
 	// sigemptyset empties the mask so no signals are blocked
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
-	sigaction(SIGVTALRM, &sa, NULL); //signal handler is called on alarm
+	//signal handler is called on alarm
+	sigaction(SIGVTALRM, &sa, NULL);
 
 	// Configure time to go off after one timespan
 	timer.it_value.tv_sec = 0;

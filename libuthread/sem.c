@@ -29,11 +29,14 @@ int sem_destroy(sem_t sem)
     if (sem == NULL){
         return -1; // Semaphore is null. Cannot perform this action
     }
+    preempt_disable();
     if (queue_length(sem->semQueueBlockedTCBs) >= 1){
+        preempt_enable();
         return -1; // Different problem. Still have blocked threads.
     }
     queue_destroy(sem->semQueueBlockedTCBs);
     free(sem);
+    preempt_enable();
     return 0;
 }
 

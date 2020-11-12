@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <sys/time.h>
+#include <assert.h>
 
 #include "private.h"
 #include "uthread.h"
@@ -23,30 +24,30 @@ struct itimerval timer;
 
 void preempt_disable(void)
 {
-	printf("P-disable\n");
+	int result;
+	//printf("P-disable\n");
+	// Initialize set for use in enable and disable
 	sigset_t set;
 	sigemptyset(&set);
 	sigaddset(&set, SIGVTALRM);
-	sigprocmask(SIG_BLOCK, &set, NULL);
+	result = sigprocmask(SIG_BLOCK, &set, NULL);
+	assert(result == 0);
 }
 
 void preempt_enable(void)
 {
-	printf("P-enable\n");
+	int result;
+	//printf("P-enable\n");
+	// Initialize set for use in enable and disable
 	sigset_t set;
 	sigemptyset(&set);
 	sigaddset(&set, SIGVTALRM);
-	sigprocmask(SIG_UNBLOCK, &set, NULL);
+	result = sigprocmask(SIG_UNBLOCK, &set, NULL);
+	assert(result == 0);
 }
-
-/*int hz_to_usec(void) 
-{
-	return round((float) 1 / (float) HZ * (float) ONE_MILLION));
-}*/
 
 void alarm_handler(int signum)
 {
-	printf("Tick\n");
 	uthread_yield();
 }
 
@@ -66,7 +67,7 @@ void preempt_start(void)
 	timer.it_value.tv_usec = 1 * (ONE_MILLION / HZ);
 	// And to then go off after every one timespan
 	timer.it_interval.tv_sec = 0;
-	timer.it_interval.tv_sec = 1 * (ONE_MILLION / HZ);
+	timer.it_interval.tv_usec = 1 * (ONE_MILLION / HZ);
 
 	setitimer(ITIMER_VIRTUAL, &timer, NULL);
 }

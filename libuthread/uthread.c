@@ -22,23 +22,22 @@ struct uthread_tcb* currTCB;
 static uthread_ctx_t mainContext;
 queue_t globalQueue;
 queue_t exited_threads;
+
+/*
+ * An example of information contained within a TCB is:
+ *
+ * Thread Identifier: Unique id (tid) is assigned to every new thread
+ * Stack pointer: Points to thread's stack in the process
+ * Program counter: Points to the current program instruction of the thread
+ * State of the thread (running, ready, waiting, start, done)
+ * Thread's register values
+ * Pointer to the Process control block (PCB) of the process that the thread lives on
+*/
+
+// A state
+// A backup of registers
+// a stack
 struct uthread_tcb {
-
-	/*
-	 * An example of information contained within a TCB is:
-
-Thread Identifier: Unique id (tid) is assigned to every new thread
-Stack pointer: Points to thread's stack in the process
-Program counter: Points to the current program instruction of the thread
-State of the thread (running, ready, waiting, start, done)
-Thread's register values
-Pointer to the Process control block (PCB) of the process that the thread lives on
-
-	 */
-
-	// A state
-	// A backup of registers
-	// a stack.
 	int state;
 	uthread_ctx_t *uctx;
     void *top_of_stack;
@@ -64,28 +63,31 @@ void uthread_yield(void)
     //printf("YIELD\n");
 
 	struct uthread_tcb* prevThread;
+    //printf("uthread_yield_d\n");
     preempt_disable();
 	prevThread = currTCB;
 	if (queue_dequeue(globalQueue, (void**) &currTCB) == -1) {
+        //printf("uthread_yield_e\n");
         preempt_enable();
         return;
     }
     //printf("YIELD DEQUEUE\n: %p", currTCB);
 	queue_enqueue(globalQueue, prevThread);
-    preempt_enable();
+    //preempt_enable();
     //queue_iterate(globalQueue, print_add);
     //printf("YIELD ENQUEUE\n: %p", prevThread);
     // In case of global_queue being empty, prevThread and currTCB point
     // to the same thread and no conta
     uthread_ctx_switch(prevThread->uctx, currTCB->uctx);
+    preempt_enable();
 }
 
 void uthread_exit(void)
 {
-	/* TODO Phase 2 */
     //printf("THREAD EXIT\n");
 
     struct uthread_tcb* prevThread;
+    //printf("uthread_exit_d\n");
     preempt_disable();
 	prevThread = currTCB;
 	queue_dequeue(globalQueue, (void**) &currTCB);
@@ -93,6 +95,7 @@ void uthread_exit(void)
     //preempt_enable();
 
     uthread_ctx_switch(prevThread->uctx, currTCB->uctx);
+    preempt_enable();
 }
 
 struct uthread_tcb *tcb_create(uthread_func_t func, void *arg)
@@ -103,15 +106,6 @@ struct uthread_tcb *tcb_create(uthread_func_t func, void *arg)
     z->uctx = (uthread_ctx_t*) malloc(sizeof(uthread_ctx_t));
     uthread_ctx_init(z->uctx, z->top_of_stack, func, arg);
 
-    /*z->top_of_stack = uthread_ctx_alloc_stack();
-    z->state = 0;
-    z->uctx = (uthread_ctx_t*) malloc(sizeof(uthread_ctx_t));
-
-    getcontext(z->uctx);
-    z->uctx->uc_stack.ss_sp   = z->top_of_stack;
-    z->uctx->uc_stack.ss_size = STACK_SIZE;
-    makecontext(z->uctx, (func_t)func, 1, arg);*/
-
     return z;
 }
 
@@ -121,8 +115,10 @@ int uthread_create(uthread_func_t func, void *arg)
 	if (tempStruct == NULL){
 	    return -1;
 	}
+    //printf("uthread_create_d\n");
     preempt_disable();
 	queue_enqueue(globalQueue, tempStruct);
+    //printf("uthread_create_e\n");
     preempt_enable();
 	return 0;
 
@@ -210,8 +206,10 @@ void uthread_block(void)
     //printf("NEW QUEUE: \n");
     //queue_iterate(globalQueue, print_add);
     //printf("\n");
-    preempt_enable();
+    //preempt_enable();
+    preempt_disable();
     uthread_ctx_switch(prevThread->uctx, currTCB->uctx); // Change execution. The thread that was blocked has been removed from the queue.
+    preempt_enable();
 }
 
 void uthread_unblock(struct uthread_tcb *uthread)

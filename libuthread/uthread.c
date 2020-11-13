@@ -153,6 +153,12 @@ int uthread_start(uthread_func_t func, void *arg)
     // Our threads start running after this call
     uthread_ctx_switch(&main_ctx, curr_thread->uctx);
 
+    // Remove idle thread from queue
+    queue_dequeue(global_queue, (void**) &curr_thread);
+    // Clean queue memory
+    queue_destroy(global_queue);
+    queue_destroy(exited_threads);
+
     preempt_stop();
     return 0;
 }

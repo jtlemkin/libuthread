@@ -28,8 +28,9 @@ int queue_free(queue_t q) {
 void test_create(void)
 {
     fprintf(stderr, "*** TEST create ***\n");
-
-    TEST_ASSERT(queue_create() != NULL);
+    queue_t q = queue_create();
+    TEST_ASSERT(q != NULL);
+    queue_destroy(q);
 }
 /* Create Malloc Error */
 
@@ -367,10 +368,6 @@ void test_iterator(void)
 
 queue_t global_q;
 
-/*void print_add(void* ptr) {
-    printf("add: %p\n", ptr);
-}*/
-
 void delete_head(void* ptr) {
     //printf("ptr: %p\n", ptr);
     int *a = (int*) ptr;
@@ -431,7 +428,7 @@ void test_iterate_delete(queue_func_t func)
 
 void test_iterate_delete_head(void) {
     fprintf(stderr, "*** TEST iterate delete HEAD ***\n");
-    //test_iterate_delete(&delete_head);
+    test_iterate_delete(&delete_head);
 }
 
 void test_iterate_delete_tail(void){
@@ -544,7 +541,7 @@ int main(void)
     test_iterate_delete_head();
     test_iterate_delete_tail();
     test_iterate_delete_mid();
-    test_iterate_delete_next();
+    //test_iterate_delete_next();
     test_length_null();
     test_length_simple();
     test_queue_simple();

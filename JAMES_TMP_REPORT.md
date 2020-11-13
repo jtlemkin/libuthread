@@ -27,4 +27,12 @@ bootstrapped or after its call to switch contexts, we knew where we needed to
 put the calls.
 
 
+In order to test preemption, we wrote a program that had two threads. Thread one
+creates thread two and then starts a non-yielding while loop that does not 
+terminate until a global variable is set to 1. Thread two iterates 5 times and 
+yields back to thread one during each iteration. In order for this function to 
+terminate, thread 2 must be scheduled, and in order for thread 2 to be scheduled 
+thread 1 must be preempted because it never yields.
+
+
 Testing was done using print statements, gdb and valgrind.

@@ -126,6 +126,11 @@ int queue_delete(queue_t queue, void *data)
 
     while (curr_node != NULL){ // Should handle case of a null queue appropriately.
         if (curr_node->data == data) { 
+            // Mark the data as null to signify that the node is being deleted
+            // This is important for queue_iterate as it allows us to know if
+            // a queue_node pointer still points to valid memory
+            curr_node->data = NULL;
+
             if (priorNode == NULL){
                 // Case in which the head is the node with data to delete. 
                 // Overwrite.
@@ -143,7 +148,10 @@ int queue_delete(queue_t queue, void *data)
             }
             // Given that we have removed the curr_node from the queue, we can 
             // free it.
+            curr_node->next = NULL;
+            curr_node = NULL;
             free(curr_node);
+            curr_node = NULL;
             queue->length -= 1;
             return 0;
         }
@@ -165,15 +173,11 @@ int queue_iterate(queue_t queue, queue_func_t func)
     struct queue_node* curr_node = queue->head_node;
     struct queue_node* next_node = NULL;
     while (curr_node){
-        printf("Curr %p\n", curr_node);
         next_node = curr_node->next; // Store next node prior to editing.
         func(curr_node->data); // Call the function on the data
-        printf("Call\n");
         if (curr_node->next) {
-            printf("Next %p\n", curr_node->next);
             curr_node = curr_node->next; // Then move on.
         } else {
-            printf("No next\n");
             // If there is no longer a next node, this can mean a few things. 
             // We could either have deleted the current node, or we may have 
             // reached the end.

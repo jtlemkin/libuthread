@@ -16,7 +16,6 @@ int is_done = -1;
 void thread2()
 {
     for (int j = 0; j < 5; ++j) {
-        printf("Here I am!\n");
         uthread_yield();
     }
 

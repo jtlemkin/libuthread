@@ -148,10 +148,10 @@ int queue_delete(queue_t queue, void *data)
             }
             // Given that we have removed the curr_node from the queue, we can 
             // free it.
-            curr_node->next = NULL;
-            curr_node = NULL;
+            //curr_node->next = NULL;
+            //curr_node = NULL;
             free(curr_node);
-            curr_node = NULL;
+            //curr_node = NULL;
             queue->length -= 1;
             return 0;
         }

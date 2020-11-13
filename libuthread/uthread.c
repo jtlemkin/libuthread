@@ -112,7 +112,7 @@ void tcb_free(struct uthread_tcb *thread)
 void idle(void *arg){
     struct uthread_tcb *exited_thread;
 
-    while (queue_length(global_queue) > 0){
+    while (queue_length(global_queue) > 0) {
         // Clean up exited threads during execution
 
         // This maybe doesn't need to stop preemption because the idlethread is
@@ -132,6 +132,11 @@ void idle(void *arg){
     while (queue_dequeue(exited_threads, (void**) &exited_thread) == 0) {
         tcb_free(exited_thread);
     }
+
+    queue_destroy(global_queue);
+    queue_destroy(exited_threads);
+
+    uthread_ctx_switch(curr_thread->uctx, &main_ctx);
 }
 
 int uthread_start(uthread_func_t func, void *arg)
@@ -153,11 +158,7 @@ int uthread_start(uthread_func_t func, void *arg)
     // Our threads start running after this call
     uthread_ctx_switch(&main_ctx, curr_thread->uctx);
 
-    // Remove idle thread from queue
-    queue_dequeue(global_queue, (void**) &curr_thread);
-    // Clean queue memory
-    queue_destroy(global_queue);
-    queue_destroy(exited_threads);
+    tcb_free(curr_thread);
 
     preempt_stop();
     return 0;

@@ -15,6 +15,15 @@ do {									\
 	}									\
 } while(0)
 
+int queue_free(queue_t q) {
+    int *data;
+
+    while(queue_dequeue(q, (void**)&data) == 0)
+        ;
+
+    return queue_destroy(q);
+}
+
 /* Create */
 void test_create(void)
 {
@@ -64,6 +73,8 @@ void test_destroy_not_empty(void)
     // Should queue be deleted or not if not empty?
 
     TEST_ASSERT(result == -1);
+
+    queue_free(q);
 }
 
 /* Enqueue null */
@@ -88,6 +99,7 @@ void test_enqueue_data_null(void)
 
     q = queue_create();
     result = queue_enqueue(q, NULL);
+    queue_free(q);
 
     TEST_ASSERT(result == -1);
 }
@@ -115,6 +127,7 @@ void test_dequeue_data_null(void)
 
     q = queue_create();
     result = queue_dequeue(q, NULL);
+    queue_free(q);
 
     TEST_ASSERT(result == -1);
 }
@@ -129,6 +142,7 @@ void test_dequeue_empty(void)
 
     q = queue_create();
     result = queue_dequeue(q, (void**)&ptr);
+    queue_free(q);
 
     TEST_ASSERT(result == -1);
 }
@@ -155,6 +169,7 @@ void test_delete_data_null(void)
     q = queue_create();
 
     result = queue_delete(q, NULL);
+    queue_free(q);
 
     TEST_ASSERT(result == -1);
 }
@@ -173,6 +188,7 @@ void test_delete_not_found(void)
     }
 
     result = queue_delete(q, data + 5);
+    queue_free(q);
 
     TEST_ASSERT(result == -1);
 }
@@ -190,6 +206,8 @@ void test_delete_simple(void)
     queue_delete(q, &data);
 
     TEST_ASSERT(queue_length(q) == 0);
+
+    queue_free(q);
 }
 /* Delete success complex */
 void test_delete_complex(void)
@@ -209,6 +227,8 @@ void test_delete_complex(void)
 
     TEST_ASSERT(queue_length(q) == 4);
     TEST_ASSERT(result == 0);
+
+    queue_free(q);
 }
 /* Delete success head */
 void test_delete_head(void)
@@ -230,6 +250,8 @@ void test_delete_head(void)
 
     queue_dequeue(q, (void**)&ptr);
     TEST_ASSERT(ptr == data + 1);
+
+    queue_free(q);
 }
 
 /* Delete success tail */
@@ -252,6 +274,8 @@ void test_delete_tail(void)
 
     queue_dequeue(q, (void**)&ptr);
     TEST_ASSERT(ptr == data);
+
+    queue_free(q);
 }
 
 /* Iterate null */
@@ -280,6 +304,7 @@ void test_iterate_function_null(void)
     q = queue_create();
 
     result = queue_delete(q, NULL);
+    queue_free(q);
 
     TEST_ASSERT(result == -1);
 }
@@ -307,6 +332,7 @@ void test_iterate_simple(void)
         // value should be i + 2
         TEST_ASSERT(*ptr == i + 2);
     }
+    queue_free(q);
 }
 
 queue_t q;
@@ -336,6 +362,7 @@ void test_iterator(void)
     queue_iterate(q, inc_item);
     TEST_ASSERT(data[0] == 2);
     TEST_ASSERT(queue_length(q) == 9);
+    queue_free(q);
 }
 
 queue_t global_q;
@@ -398,7 +425,7 @@ void test_iterate_delete(queue_func_t func)
 
             TEST_ASSERT(result == 0);
         }
-        queue_destroy(global_q);
+        queue_free(global_q);
     }
 }
 
@@ -448,6 +475,7 @@ void test_length_simple(void)
         queue_enqueue(q, data + i);
     }
     TEST_ASSERT(queue_length(q) == 3);
+    queue_free(q);
 }
 
 /* Enqueue/Dequeue simple */
@@ -465,6 +493,7 @@ void test_queue_simple(void)
     TEST_ASSERT(result1 == 0);
     TEST_ASSERT(result2 == 0);
     TEST_ASSERT(ptr == &data);
+    queue_free(q);
 }
 
 /* Enqueue/Dequeue complex */
@@ -485,12 +514,14 @@ void test_queue_complex(void)
         queue_dequeue(q, (void**)&ptr);
         TEST_ASSERT(ptr == (data + i));
     }
+
+    queue_free(q);
 }
 
 
 int main(void)
 {
-    test_create();
+    /*test_create();
     test_destroy();
     test_destroy_null();
     test_destroy_not_empty();
@@ -508,16 +539,16 @@ int main(void)
     test_delete_tail();
     test_iterate_null();
     test_iterate_simple();
-    test_iterate_function_null();
+    test_iterate_function_null();*/
     test_iterator();
-    test_iterate_delete_head();
+    /*test_iterate_delete_head();
     test_iterate_delete_tail();
     test_iterate_delete_mid();
     test_iterate_delete_next();
     test_length_null();
     test_length_simple();
     test_queue_simple();
-    test_queue_complex();
+    test_queue_complex();*/
 
     return 0;
 }

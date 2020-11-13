@@ -521,7 +521,7 @@ void test_queue_complex(void)
 
 int main(void)
 {
-    /*test_create();
+    test_create();
     test_destroy();
     test_destroy_null();
     test_destroy_not_empty();
@@ -539,16 +539,16 @@ int main(void)
     test_delete_tail();
     test_iterate_null();
     test_iterate_simple();
-    test_iterate_function_null();*/
+    test_iterate_function_null();
     test_iterator();
-    /*test_iterate_delete_head();
+    test_iterate_delete_head();
     test_iterate_delete_tail();
     test_iterate_delete_mid();
     test_iterate_delete_next();
     test_length_null();
     test_length_simple();
     test_queue_simple();
-    test_queue_complex();*/
+    test_queue_complex();
 
     return 0;
 }
